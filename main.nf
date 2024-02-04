@@ -1,8 +1,5 @@
 #!/usr/bin/env nextflow
 
-/// To use DSL-2 will need to include this
-nextflow.enable.dsl=2
-
 // =================================================================
 // main.nf is the pipeline script for a nextflow pipeline
 // Should contain the following sections:
@@ -15,7 +12,7 @@ nextflow.enable.dsl=2
 // with project-specific code. For more information see:
 // https://www.nextflow.io/docs/latest/index.html.
 //
-// ===================================================================
+// ====================================================================
 
 // Import processes or subworkflows to be run in the workflow
 // Each of these is a separate .nf script saved in modules/ directory
@@ -26,21 +23,22 @@ include { processTwo } from './modules/process2'
 // Print a header for your pipeline 
 log.info """\
 
-=======================================================================================
-Name of the pipeline - nf 
-=======================================================================================
+====================================================================
+RNASEQ DE NF
+====================================================================
 
-Created by <YOUR NAME> 
-Find documentation @ https://sydney-informatics-hub.github.io/Nextflow_DSL2_template_guide/
+
+Created by the Sydney Informatics Hub, University of Sydney
+Find documentation @ https://github.com/Sydney-Informatics-Hub/RNAseq-DE-nf
 Cite this pipeline @ INSERT DOI
 
-=======================================================================================
+====================================================================
 Workflow run parameters 
-=======================================================================================
+====================================================================
 input       : ${params.input}
 outDir      : ${params.outDir}
 workDir     : ${workflow.workDir}
-=======================================================================================
+====================================================================
 
 """
 
@@ -50,19 +48,24 @@ workDir     : ${workflow.workDir}
 
 def helpMessage() {
     log.info"""
-  Usage:  nextflow run main.nf --input <samples.tsv> 
+  Usage:   nextflow run main.nf --input samples.csv \
+                     			--refFasta /path/to/ref.fasta --refGtf /path/to/ref.gtf
 
   Required Arguments:
-
-  --input	Specify full path and name of sample
-		input file (tab separated).
+    --input                                   Full path and name of sample input file (csv format)
+    --refFasta                                Full path and name of reference genome (fasta format)
+    --refGtf								  Full path and name of reference annotation (gtf format)
 
   Optional Arguments:
+    --outDir                        Specify name of results directory.
 
-  --outDir	Specify path to output directory. 
-	
-""".stripIndent()
+
+  HPC accounting arguments:
+    --whoami                    HPC user name (Setonix or Gadi HPC)
+    --gadi_account              Project accounting code for NCI Gadi (e.g. aa00)
+  """.stripIndent()
 }
+
 
 // Define workflow structure. Include some input/runtime tests here.
 // See https://www.nextflow.io/docs/latest/dsl2.html?highlight=workflow#workflow
