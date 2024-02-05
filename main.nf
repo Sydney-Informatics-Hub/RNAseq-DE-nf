@@ -18,6 +18,7 @@
 // Each of these is a separate .nf script saved in modules/ directory
 // See https://training.nextflow.io/basic_training/modules/#importing-modules 
 include { checkCohort} from './modules/checkCohort.nf'
+include { fastqc     } from './modules/fastqc.nf'
 include { processOne } from './modules/process1'
 include { processTwo } from './modules/process2' 
 
@@ -91,9 +92,14 @@ if ( params.help || params.input == false ){
 // check the existence of input files  
 	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
-// Run process 1 
+//  
+inputs = checkCohort.out
+		.splitCsv(header: true, sep:"\t")
+		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
+
+// Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	processOne(input)
+	fastqc(inputs)
 	
 // Run process 2 which takes output of process 1 
 	processTwo(processOne.out.File)

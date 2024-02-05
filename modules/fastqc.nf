@@ -2,10 +2,10 @@
 process fastqc {	
 
     debug = true //turn to false to stop printing command stdout to screen
-    publishDir "${params.output}/${sampleID}", mode: 'copy'
+    publishDir "${params.outDir}/${sampleID}", mode: 'copy'
 
     input: 
-    tuple val(sampleID), path(fastq)
+    tuple val(sampleID), path(R1), path(R2)
 
     output:
     path("${sampleID}*fastqc.html")
@@ -14,7 +14,7 @@ process fastqc {
     script:
     """
     mkdir ${sampleID}
-    fastqc ${fastq}
+    fastqc ${R1}${R2}
 
     """
 }
