@@ -1,63 +1,78 @@
 #!/usr/bin/env nextflow
 
-// =================================================================
-// main.nf is the pipeline script for a nextflow pipeline
-// Should contain the following sections:
-	// Process definitions
-    // Channel definitions
-    // Workflow structure
-	// Workflow summary logs 
+// Import subworkflows to be run in the workflow
+include { checkInputs                                    } from './modules/checkCohort'
+include { convertGtfToBED                                } from './modules/convertGtfToBED'
 
-// Examples are included for each section. Remove them and replace
-// with project-specific code. For more information see:
-// https://www.nextflow.io/docs/latest/index.html.
-//
-// ====================================================================
+include { makeSTARIndex					 } from './modules/makeSTARIndex'
 
-// Import processes or subworkflows to be run in the workflow
-// Each of these is a separate .nf script saved in modules/ directory
-// See https://training.nextflow.io/basic_training/modules/#importing-modules 
-include { processOne } from './modules/process1'
-include { processTwo } from './modules/process2' 
+// Mapping is done at lane level (per sample pair as is in sampleSheet) and then merge bams 
+include { runSTARAlign                                   } from './modules/runSTARAlign' 
+include { runSamtoolsMergeIndex		                 } from './modules/runSamtoolsMergeIndex'
 
-// Print a header for your pipeline 
+include { runHtseqCount                                   } from './modules/runHtseqCount'
+include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+include { getMappingMetricRSeQC                           } from './modules/getMappingMetricRSeQC'
+
+
+/// Print a header for your pipeline 
+
 log.info """\
 
-====================================================================
-RNASEQ DE NF
-====================================================================
-
+===================================================================
+===================================================================
+SOMATIC SHORT V - NF 
+===================================================================
+===================================================================
 
 Created by the Sydney Informatics Hub, University of Sydney
-Find documentation @ https://github.com/Sydney-Informatics-Hub/RNAseq-DE-nf
-Cite this pipeline @ INSERT DOI
 
-====================================================================
+Documentation	@ https://github.com/Sydney-Informatics-Hub/Somatic-shortV-nf
+
+Cite					@ https://doi.org/10.48546/workflowhub.workflow.691.1
+
+Log issues    @ https://github.com/Sydney-Informatics-Hub/Somatic-shortV-nf/issues
+
+All the default parameters are set in `nextflow.config`
+
+=======================================================================================
 Workflow run parameters 
-====================================================================
-input       : ${params.input}
-outDir      : ${params.outDir}
-workDir     : ${workflow.workDir}
-====================================================================
+=======================================================================================
+version                    : ${params.version}
+input                      : ${params.input}
+reference                  : ${params.ref}
+dict                       : ${params.dict} 
+common_biallelic_variants  : ${params.common_biallelic_variants}
+ponvcf                     : ${params.ponvcf}
+outDir                     : ${params.outDir}
+workDir                    : ${workflow.workDir}
 
-"""
+=======================================================================================
+
+ """
 
 /// Help function 
 // This is an example of how to set out the help function that 
-// will be run if run command is incorrect or missing. 
+// will be run if run command is incorrect (if set in workflow) 
+// or missing/  
 
 def helpMessage() {
     log.info"""
   Usage:   nextflow run main.nf --input samples.csv \
-                     			--refFasta /path/to/ref.fasta --refGtf /path/to/ref.gtf
+                     --ref /path/to/ref.fasta --dict /path/to/ref.dict \
+                     --ponvcf /path/to/pon \
+                     --common_biallelic_variants /path/to/common_biallelic_variants
 
   Required Arguments:
-    --input                                   Full path and name of sample input file (csv format)
-    --refFasta                                Full path and name of reference genome (fasta format)
-    --refGtf								  Full path and name of reference annotation (gtf format)
-
+    --input		                      Full path and name of sample input file (csv format)
+    --ref			                      Full path and name of reference genome (fasta format)
+    --dict                          Full path and name of reference genome dictionary file (dict format)
+    --ponvcf                        Full path and name of the Panel of Normals file (vcf format)
+    --common_biallelic_variants     Full path and name of the common biallelic variant resources file (vcf format)
+	
   Optional Arguments:
-    --outDir                        Specify name of results directory.
+    --outDir                        Specify name of results directory. 
+    --number_of_intervals           Define a specific number genomic-intervals for parallelisation
 
 
   HPC accounting arguments:
@@ -66,40 +81,95 @@ def helpMessage() {
   """.stripIndent()
 }
 
+/// Main workflow structure. 
 
-// Define workflow structure. Include some input/runtime tests here.
-// See https://www.nextflow.io/docs/latest/dsl2.html?highlight=workflow#workflow
 workflow {
 
-// Show help message if --help is run or (||) a required parameter (input) is not provided
+// Show help message if --help is run or if any required params are not 
+// provided at runtime
 
-if ( params.help || params.input == false ){   
-// Invoke the help function above and exit
-	helpMessage()
-	exit 1
-	// consider adding some extra contigencies here.
-	// could validate path of all input files in list?
-	// could validate indexes for reference exist?
+  if ( params.help == true || params.input == false)
+	{   
 
-// If none of the above are a problem, then run the workflow
-} else {
+          // Invoke the help function above and exit
+          helpMessage()
+          exit 1
+        
+	} 
+
+
+	else 
+	{
 	
-// Define channels 
-// See https://www.nextflow.io/docs/latest/channel.html#channels
-// See https://training.nextflow.io/basic_training/channels/ 
-	input = Channel.value("${params.input}")
+  // Check inputs file exists
 
-// Run process 1 
-// See https://training.nextflow.io/basic_training/processes/#inputs 
-	processOne(input)
+	//Input samplesheet looks like this
+	//ID1,ID1_L1_R1.fastq,ID1_L1_R2.fastq
+	//ID1,ID1_L2_R1.fastq,ID1_L2_R2.fastq
+  //ID2,ID2_L1_R1.fastq,ID2_L1_R2.fastq
+	//ID2,ID2_L2_R1.fastq,ID2_L2_R2.fastq
+
+	checkInputs(Channel.fromPath(params.input, checkIfExists: true))
+
+
+	uniqueSampleIDs = checkInputs.out.flatMap { filePath ->
+		    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }
+						}
+			.distinct()
 	
-// Run process 2 which takes output of process 1 
-	processTwo(processOne.out.File)
+	uniqueSampleIDsList = uniqueSampleIDs.toList()
+
+	uniqueSampleIDsList.view()
+
+
+	// Split cohort file to collect info for each sample
+  fastq_eachLane_ch = checkInputs.out
+                .splitCsv(header: true, sep:",")
+                .map { row -> tuple(row.sampleID, file(row.R1), file(row.R2),row.SEQUENCING_CENTRE,row.PLATFORM,row.RUN_TYPE_SINGLE_PAIRED,row.Lane,row.LIBRARY)}
+
+
+//ACTUALL - It is required to map per lane level and then merge !
+//	=========== >Merge lane level to sample level BAMs: 
+
+//UHR_Rep1,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/UHR_Rep1_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/UHR_Rep1_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+//HBR_Rep3,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep3_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep3_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+//HBR_Rep2,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep2_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep2_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+//HBR_Rep1,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep1_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/temp_git_repo/test_data_2024/HBR_Rep1_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+
+
+//Run the processes 
+
+
+convertGtfToBED(params.refGtf)
+
+makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
+
+
+// STAR Alignment
+
+// (A) Use available STAR index
+//runSTARAlign(fastq_eachLane_ch,runBbduk_trim.out[0],runBbduk_trim.out[1],params.NCPUS,params.STARRefIndexPath)
+
+// (B) Align
+runSTARAlign(fastq_eachLane_ch,params.NCPUS,makeSTARIndex.out)
+
+
+// Merge and Index
+//runSamtoolsMergeIndex(fastq_eachLane_ch,runSTARAlign.out[0],params.NCPUS)
+runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out[0].collect(),params.NCPUS)
+
+
+//getMappingMetricRSeQC(fastq_eachLane_ch,convertGtfToBED.out,runSTARAlign.out[0],runSamtoolsMergeIndex.out)
+
+// HTseqCount
+//runHtseqCount(fastq_eachLane_ch,runSTARAlign.out[0],params.refGtf,params.strand)
+//mergeHtseqCounts(runHtseqCount.out.collect())
+
+
 }}
 
-// Print workflow execution summary 
 workflow.onComplete {
-summary = """
+  summary = """
 =======================================================================================
 Workflow execution summary
 =======================================================================================
@@ -112,6 +182,7 @@ outDir      : ${params.outDir}
 
 =======================================================================================
   """
-println summary
+  println summary
 
 }
+

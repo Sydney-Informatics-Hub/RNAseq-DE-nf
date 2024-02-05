@@ -1,0 +1,124 @@
+// =================================================================
+// nextflow.config is the main configuration script for a nextflow pipeline
+// Should contain the following sections:
+	// A manifest for defining workflow metadata
+	// Mandated minimal version of Nextflow required to run pipeline
+	// Default workflow parameter definitions
+	// Shell behaviour settings for the workflow
+	// Execution reports
+	// Configuration profiles
+	// Default resource definitions for processes
+
+// Examples are included for each section. Remove them and replace
+// with project-specific code. For more information see:
+// https://www.nextflow.io/docs/latest/index.html.
+//
+// ===================================================================
+
+// Define some metadata for publishing pipeline on GitHub
+// See https://www.nextflow.io/docs/latest/config.html#scope-manifest
+manifest {
+	author = 'Nandan Deshpande'
+	name = 'RNAseq-DE-nf'
+	description = 'RNASeq-DE-nf is a highly scalable workflow that pre-processes Illumina RNA sequencing data for differential expression'
+	homePage = 'https://github.com/Sydney-Informatics-Hub/RNAseq-DE-nf'
+}
+
+// Mandate a minimum version of nextflow required to run the pipeline
+// See https://www.nextflow.io/docs/latest/config.html#nextflow-version
+nextflowVersion = '!>=20.07.1'
+
+// Set default workflow parameters
+// See https://www.nextflow.io/docs/latest/config.html#scope-params 
+
+params {
+	help	= false
+	outDir	= 'results'
+	input	= false
+}
+
+// Preset use of containers with Singularity
+singularity {
+    enabled                 = false
+    autoMounts          = true
+    }
+
+// Enable profiles for different compute infrastructures or set up
+// See https://www.nextflow.io/docs/latest/config.html#config-profiles
+profiles {
+	standard	{ includeConfig "config/standard.config"}
+	gadi		{ includeConfig "config/gadi.config"	}     
+	setonix		{ includeConfig "config/setonix.config"	}
+	nimbus		{ includeConfig "config/nimbus.config"	}
+}
+
+// Fail a task if any command returns non-zero exit code
+// See https://www.nextflow.io/docs/latest/process.html#script 
+shell = ['/bin/bash', '-euo', 'pipefail']
+
+
+// Set default resources for each process 
+// See https://www.nextflow.io/docs/latest/config.html?highlight=withname#scope-process 
+process {
+
+  cpus = 2
+  memory = '4.GB'
+  time = '2h'
+  executor = 'local'
+
+  withName: 'checkInputs' {
+        memory = '4.GB'
+	}
+
+
+  withName: 'makeSTARIndex' {
+    container = 'quay.io/biocontainers/star:2.7.11a--h0033a41_0'
+
+	}
+
+
+  withName: 'runSTARAlign' {
+    container = 'quay.io/biocontainers/star:2.7.11a--h0033a41_0'
+
+  	}
+
+
+  withName: 'runSamtoolsMergeIndex' {
+    container = 'https://depot.galaxyproject.org/singularity/samtools:1.18--h50ea8bc_1'
+	
+	}
+
+}
+
+
+// Define timestamp, to avoid overwriting existing trace
+def timestamp = new java.util.Date().format('yyyy-MM-dd_HH-mm-ss')
+
+
+// Produce a workflow diagram
+// See https://www.nextflow.io/docs/latest/tracing.html#dag-visualisation
+dag {
+  enabled = true
+  file = "${params.outDir}/runInfo/RNASeq_dag_${timestamp}.svg"
+}
+
+report {
+  enabled = true
+  file = "${params.outDir}/runInfo/RNASeq_report_${timestamp}.html"
+}
+
+timeline {
+  enabled = true
+        overwrite = true
+        file = "${params.outDir}/runInfo/RNASeq_timeline_${timestamp}.html"
+}
+
+
+// Output process execution trace file 
+// See https://www.nextflow.io/docs/latest/tracing.html#trace-report
+trace {
+        enabled = true
+        overwrite = true
+  file = "${params.outDir}/runInfo/RNASeq_trace_${timestamp}.txt"
+  fields = 'process,name,status,queue,realtime,cpus,%cpu,memory,%mem,rss,env'
+} 
