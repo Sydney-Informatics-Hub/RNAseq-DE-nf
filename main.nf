@@ -17,6 +17,7 @@
 // Import processes or subworkflows to be run in the workflow
 // Each of these is a separate .nf script saved in modules/ directory
 // See https://training.nextflow.io/basic_training/modules/#importing-modules 
+include { checkCohort} from './modules/checkCohort.nf'
 include { processOne } from './modules/process1'
 include { processTwo } from './modules/process2' 
 
@@ -86,8 +87,9 @@ if ( params.help || params.input == false ){
 	
 // Define channels 
 // See https://www.nextflow.io/docs/latest/channel.html#channels
-// See https://training.nextflow.io/basic_training/channels/ 
-	input = Channel.value("${params.input}")
+// See https://training.nextflow.io/basic_training/channels/
+// check the existence of input files  
+	checkInputs(Channel.fromPath(params.input, checkIfExists: true))
 
 // Run process 1 
 // See https://training.nextflow.io/basic_training/processes/#inputs 
