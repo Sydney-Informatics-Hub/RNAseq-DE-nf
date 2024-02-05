@@ -89,7 +89,7 @@ if ( params.help || params.input == false ){
 // See https://www.nextflow.io/docs/latest/channel.html#channels
 // See https://training.nextflow.io/basic_training/channels/
 // check the existence of input files  
-	checkInputs(Channel.fromPath(params.input, checkIfExists: true))
+	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
 // Run process 1 
 // See https://training.nextflow.io/basic_training/processes/#inputs 
