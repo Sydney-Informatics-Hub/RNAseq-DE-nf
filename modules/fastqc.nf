@@ -1,25 +1,21 @@
 // Define the process
-process processTwo {
-	// Define directives 
-	// See: https://www.nextflow.io/docs/latest/process.html#directives
-	debug = true //turn to false to stop printing command stdout to screen
-	publishDir "${params.outDir}/process2", mode: 'copy'
+process fastqc {	
 
-	// Define input 
-	// See: https://www.nextflow.io/docs/latest/process.html#inputs
-	input:
-	file("process1out.txt")
+    debug = true //turn to false to stop printing command stdout to screen
+    publishDir "${params.outDir}/${sampleID}", mode: 'copy'
 
-	// Define output(s)
-	// See: https://www.nextflow.io/docs/latest/process.html#outputs
-	output:
-	path("process2out.txt")
+    input: 
+    tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
+    
 
-	// Define code to execute 
-	// See: https://www.nextflow.io/docs/latest/process.html#script
-	script:
-	"""
-    tac processed_cohort.txt | rev \
-    	> process2out.txt
-	"""
- }
+    output:
+    path("${sampleID}*fastqc.html")
+    path("${sampleID}*fastqc.zip")
+
+    script:
+    """
+    mkdir ${sampleID}
+    fastqc ${R1} ${R2}
+
+    """
+}

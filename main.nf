@@ -17,8 +17,8 @@
 // Import processes or subworkflows to be run in the workflow
 // Each of these is a separate .nf script saved in modules/ directory
 // See https://training.nextflow.io/basic_training/modules/#importing-modules 
-include { processOne } from './modules/process1'
-include { processTwo } from './modules/process2' 
+include { checkCohort} from './modules/checkCohort.nf'
+include { fastqc     } from './modules/fastqc.nf'
 
 // Print a header for your pipeline 
 log.info """\
@@ -86,15 +86,18 @@ if ( params.help || params.input == false ){
 	
 // Define channels 
 // See https://www.nextflow.io/docs/latest/channel.html#channels
-// See https://training.nextflow.io/basic_training/channels/ 
-	input = Channel.value("${params.input}")
+// See https://training.nextflow.io/basic_training/channels/
+// check the existence of input files  
+	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
-// Run process 1 
+inputs = checkCohort.out
+		.splitCsv(header: true, sep:",")
+		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
+
+// Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	processOne(input)
-	
-// Run process 2 which takes output of process 1 
-	processTwo(processOne.out.File)
+	fastqc(inputs)
+	multiqc(fastqc.out[1].collect(),inputs)
 }}
 
 // Print workflow execution summary 
