@@ -19,6 +19,7 @@
 // See https://training.nextflow.io/basic_training/modules/#importing-modules 
 include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
+include { multiqc    } from './modules/multiqc.nf'
 
 // Print a header for your pipeline 
 log.info """\
