@@ -1,25 +1,27 @@
 // Define the process
-process processTwo {
+process multiqc {
 	// Define directives 
 	// See: https://www.nextflow.io/docs/latest/process.html#directives
 	debug = true //turn to false to stop printing command stdout to screen
-	publishDir "${params.outDir}/process2", mode: 'copy'
+	publishDir "${params.outDir}", mode: 'copy'
 
 	// Define input 
 	// See: https://www.nextflow.io/docs/latest/process.html#inputs
 	input:
-	file("process1out.txt")
+	path ('*')
+	tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
 
 	// Define output(s)
 	// See: https://www.nextflow.io/docs/latest/process.html#outputs
 	output:
-	path("process2out.txt")
+	path ('multiqc_report.html')
+	path ('multiqc_data')
 
 	// Define code to execute 
 	// See: https://www.nextflow.io/docs/latest/process.html#script
 	script:
 	"""
-    tac processed_cohort.txt | rev \
-    	> process2out.txt
+	multiqc .
+
 	"""
  }
