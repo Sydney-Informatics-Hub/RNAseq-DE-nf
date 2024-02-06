@@ -123,9 +123,27 @@ workflow {
 
 
 	// Split cohort file to collect info for each sample
-  fastq_eachLane_ch = checkInputs.out
-                .splitCsv(header: true, sep:",")
-                .map { row -> tuple(row.sampleID, file(row.R1), file(row.R2),row.SEQUENCING_CENTRE,row.PLATFORM,row.RUN_TYPE_SINGLE_PAIRED,row.Lane,row.LIBRARY)}
+  //fastq_eachLane_ch = checkInputs.out
+  //              .splitCsv(header: true, sep:",")
+  //              .map { row -> tuple(row.sampleID, file(row.R1), file(row.R2),row.SEQUENCING_CENTRE,row.PLATFORM,row.RUN_TYPE_SINGLE_PAIRED,row.Lane,row.LIBRARY)}
+
+// Define a valid empty file path using $PWD
+def emptyFilePath = "$PWD/empty_file.txt"
+
+// Check if the empty file exists, create it if necessary
+if (!file(emptyFilePath).exists()) {
+    file(emptyFilePath).text = ""
+}
+
+
+fastq_eachLane_ch = checkInputs.out
+	    	.splitCsv(header: true, sep:",")
+    		.map { row ->
+        	def R2File = row.R2 ? file(row.R2) : file(emptyFilePath) // Provide a default empty file path
+        	tuple(row.sampleID, file(row.R1), R2File, row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.Lane, row.LIBRARY)
+    			}
+
+
 
 
 //ACTUALL - It is required to map per lane level and then merge !
@@ -154,16 +172,19 @@ makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
 runSTARAlign(fastq_eachLane_ch,params.NCPUS,makeSTARIndex.out)
 
 
+
 // Merge and Index
-//runSamtoolsMergeIndex(fastq_eachLane_ch,runSTARAlign.out[0],params.NCPUS)
+
 runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out[0].collect(),params.NCPUS)
 
 
 //getMappingMetricRSeQC(fastq_eachLane_ch,convertGtfToBED.out,runSTARAlign.out[0],runSamtoolsMergeIndex.out)
+getMappingMetricRSeQC(runSamtoolsMergeIndex.out[2],convertGtfToBED.out,runSamtoolsMergeIndex.out[0],runSamtoolsMergeIndex.out[1])
+
 
 // HTseqCount
-//runHtseqCount(fastq_eachLane_ch,runSTARAlign.out[0],params.refGtf,params.strand)
-//mergeHtseqCounts(runHtseqCount.out.collect())
+runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
+mergeHtseqCounts(runHtseqCount.out.collect())
 
 
 }}

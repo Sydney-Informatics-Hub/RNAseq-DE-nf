@@ -58,7 +58,8 @@ nextflow run main.nf -resume \
         --STARRefIndexPath ${STARRefIndexPath} \
 	--refFasta ${refFasta} \
 	--refGtf ${refGtf} \
-	--strand ${strand}
+	--strand ${strand} \
+	--outDir ${outDir}
         
         
 

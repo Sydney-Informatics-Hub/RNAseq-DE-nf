@@ -1,35 +1,39 @@
 process getMappingMetricRSeQC {
 
         // where to publish the outputs
-        tag "$sampleID runSTARAlign"
-        publishDir "${params.outDir}/STAR/${sampleID}/RSeQC", mode:'copy'
+        tag "$uniqueSampleID getMappingMetricRSeQC"
+        publishDir "${params.outDir}/STAR/${uniqueSampleID}/RSeQC", mode:'copy'
 
         input:
-        	tuple val(sampleID) , file(R1_fastq), file(R2_fastq), val(seqcentre), val(platform), val(RUN_TYPE_SINGLE_PAIRED), val(lane),val(library)
+		val uniqueSampleID
 		path refBed
-		path sampleIDBam
-		path sampleIDBamBai
+		path uniqueSampleIDBam
+		path uniqueSampleIDBamBai
+
 
 
 	output:
-		path ("${sampleID}_${lane}.infer_experiment.txt")
-		//path ("${sampleID}_${lane}.read_distribution.txt")
-		path ("${sampleID}_${lane}.bam_stat.txt")
+		val ("$uniqueSampleID")
+		path ("${uniqueSampleID}.infer_experiment.txt")
+		//path ("${uniqueSampleID}.read_distribution.txt")
+		path ("${uniqueSampleID}.bam_stat.txt")
+			
+
 
         script:
 	
 		"""
 
 		infer_experiment.py \
-       			 -i $sampleIDBam \
-        		 -r $refBed > ${sampleID}_${lane}.infer_experiment.txt
+       			 -i $uniqueSampleIDBam \
+        		 -r $refBed > ${uniqueSampleID}.infer_experiment.txt
 
 		#read_distribution.py \
-		#	-i $sampleIDBam \
-                #        -r $refBed > ${sampleID}_${lane}.read_distribution.txt
+		#	-i $uniqueSampleIDBam \
+                #        -r $refBed > ${uniqueSampleID}.read_distribution.txt
 
 		bam_stat.py \
-			-i $sampleIDBam > ${sampleID}_${lane}.bam_stat.txt
+			-i $uniqueSampleIDBam > ${uniqueSampleID}.bam_stat.txt
 
 		
 

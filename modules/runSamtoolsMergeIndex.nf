@@ -1,40 +1,54 @@
 process runSamtoolsMergeIndex {
 
+
 	// where to publish the outputs
-        tag "$sampleID runSamtoolsMergeIndex"
+        tag "$uniqueSampleID runSamtoolsMergeIndex"
         publishDir "${params.outDir}/STAR/${uniqueSampleID}", mode:'copy'
 
-  
-        input:
-        	each uniqueSampleID        
-	        path(sampleID_bams)
-		val(NCPUS)
+	input:
+                each uniqueSampleID
+                path(sampleID_bams)
+                val(NCPUS)
 
-        output:
-                path ("${final}.bam.bai")
+	output:
+		path ("${uniqueSampleID}.final.bam")
+		path ("${uniqueSampleID}.final.bam.bai")
+		val ("$uniqueSampleID")
 
+	shell:
+	'''
 
-	script:
+	#https://github.com/nextflow-io/nextflow/issues/3962
 
-	"""
-
-	 # Merge options to be picked from https://github.com/Sydney-Informatics-Hub/RNASeq-DE/blob/master/Scripts/samtools_merge_index.sh
-
-        outDir=${params.outDir}
-
-        sampbams=()
-        sampbams+=("$(ls ${outDir}/STAR/${uniqueSampleID}/${uniqueSampleID}*_Aligned.sortedByCoord.out.bam)")
-        final=${sampleid}.final.bam
-
-        samtools merge -f -@ ${NCPUS} ${final} ${sampbams[@]}
+	sampbams=()
+	sampbams+=("$(ls !{uniqueSampleID}*_Aligned.sortedByCoord.out.bam)")	
 
 
-        # Index for now
-        samtools index -@ ${NCPUS} ${final} -o !{final}.bam.bai
+	echo My working DIR: $PWD
+	echo bams: $sampbams
+	
+	final=!{uniqueSampleID}.final.bam
+
+	# Define an empty array
+	sampbams_final=()
+
+	# Iterate over each element in sampbams array
+		for filename in \${sampbams[@]}; do
+   		# Concatenate $PWD/ to each filename and add it to sampbams_final array
+    			sampbams_final+=(\$PWD/$filename)
+		done
 
 
+	echo bams final: $sampbams_final
 
 
-	"""
+	samtools merge -f -@ !{NCPUS} "$final" "$sampbams_final"
+
+	samtools index -@ !{NCPUS} "$final" -o "$final".bai
+
+
+	'''
+
+	
 
 }

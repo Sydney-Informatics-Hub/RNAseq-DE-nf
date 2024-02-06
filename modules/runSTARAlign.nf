@@ -17,7 +17,7 @@ process runSTARAlign {
 	
 		"""
 	
-		if [ "${RUN_TYPE_SINGLE_PAIRED}" -ne 'SINGLE' ]; then
+		if [ "${RUN_TYPE_SINGLE_PAIRED}" == 'PAIRED' ]; then
 
 		flowcell=1
 		#lane=1
