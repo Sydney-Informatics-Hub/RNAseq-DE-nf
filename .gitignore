@@ -1,0 +1,12 @@
+# Ignore log file
+.nextflow.log*
+.nextflow/
+.nextflow/history
+
+# Ignore generated folders
+results/
+work/
+data/
+bio-test-datasets/
+false/
+scripts/
