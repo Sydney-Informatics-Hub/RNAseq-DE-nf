@@ -18,6 +18,8 @@
 // Each of these is a separate .nf script saved in modules/ directory
 // See https://training.nextflow.io/basic_training/modules/#importing-modules 
 include { checkCohort} from './modules/checkCohort.nf'
+include { fastqc     } from './modules/fastqc.nf'
+include { multiqc    } from './modules/multiqc.nf'
 
 // Print a header for your pipeline 
 log.info """\
@@ -93,6 +95,10 @@ inputs = checkCohort.out
 		.splitCsv(header: true, sep:",")
 		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
 
+// Run fastqc
+// See https://training.nextflow.io/basic_training/processes/#inputs 
+	fastqc(inputs)
+	multiqc(fastqc.out[1].collect())
 }}
 
 // Print workflow execution summary 
