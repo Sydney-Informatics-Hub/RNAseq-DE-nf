@@ -30,8 +30,8 @@
 RNASeq-DE-nf is a pipeline that pre-processes Illumina RNA sequencing data for differential expression (raw FASTQ to counts). The pipeline is written in Nextflow and uses Singularity to run containerised tools.  
 
 The steps in this pipeline include:
-1. QC of raw FASTQs
-2. Trim raw FASTQs
+1. QC of raw FASTQs (Fastqc -> multiQC)
+2. Trim raw FASTQs (bbduk)
 3. Mapping with STAR aligner 
   -  Alignment (Fastq-to-bam)
   -  Merge lane level to sample level BAMs

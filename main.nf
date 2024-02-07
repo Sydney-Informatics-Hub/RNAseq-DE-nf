@@ -20,6 +20,7 @@
 include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
+include { bbduk      } from './modules/bbduk.nf'
 
 // Print a header for your pipeline 
 log.info """\
@@ -99,6 +100,8 @@ inputs = checkCohort.out
 // See https://training.nextflow.io/basic_training/processes/#inputs 
 	fastqc(inputs)
 	multiqc(fastqc.out[1].collect())
+  bbduk(params.adapters_bbmap, inputs)
+
 }}
 
 // Print workflow execution summary 
