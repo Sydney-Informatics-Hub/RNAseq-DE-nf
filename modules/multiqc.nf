@@ -9,7 +9,7 @@ process multiqc {
 	// See: https://www.nextflow.io/docs/latest/process.html#inputs
 	input:
 	path ('*')
-	tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
+	//tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
 
 	// Define output(s)
 	// See: https://www.nextflow.io/docs/latest/process.html#outputs

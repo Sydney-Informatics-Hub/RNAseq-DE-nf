@@ -98,7 +98,7 @@ inputs = checkCohort.out
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
 	fastqc(inputs)
-	multiqc(fastqc.out[1].collect(),inputs)
+	multiqc(fastqc.out[1].collect())
 }}
 
 // Print workflow execution summary 
