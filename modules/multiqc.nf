@@ -3,13 +3,13 @@ process multiqc {
 	// Define directives 
 	// See: https://www.nextflow.io/docs/latest/process.html#directives
 	debug = true //turn to false to stop printing command stdout to screen
-	publishDir "${params.outDir}", mode: 'copy'
+	publishDir "${params.outDir}/multiqc_raw", mode: 'copy'
 
 	// Define input 
 	// See: https://www.nextflow.io/docs/latest/process.html#inputs
 	input:
 	path ('*')
-	tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
+	//tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
 
 	// Define output(s)
 	// See: https://www.nextflow.io/docs/latest/process.html#outputs
