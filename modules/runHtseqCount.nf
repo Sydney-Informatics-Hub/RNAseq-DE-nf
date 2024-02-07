@@ -2,7 +2,7 @@ process runHtseqCount {
 
         // where to publish the outputs
         tag "$uniqueSampleID runHtseqCount"
-        publishDir "${params.outDir}/STAR/${uniqueSampleID}", mode:'copy'
+        publishDir "${params.outDir}/${uniqueSampleID}/STAR", mode:'copy'
 
         input:
 			val uniqueSampleID			

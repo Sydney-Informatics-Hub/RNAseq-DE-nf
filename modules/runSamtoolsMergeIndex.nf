@@ -3,7 +3,7 @@ process runSamtoolsMergeIndex {
 
 	// where to publish the outputs
         tag "$uniqueSampleID runSamtoolsMergeIndex"
-        publishDir "${params.outDir}/STAR/${uniqueSampleID}", mode:'copy'
+        publishDir "${params.outDir}/${uniqueSampleID}/STAR", mode:'copy'
 
 	input:
                 each uniqueSampleID

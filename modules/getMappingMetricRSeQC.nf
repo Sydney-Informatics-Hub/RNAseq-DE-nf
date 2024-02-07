@@ -2,7 +2,7 @@ process getMappingMetricRSeQC {
 
         // where to publish the outputs
         tag "$uniqueSampleID getMappingMetricRSeQC"
-        publishDir "${params.outDir}/STAR/${uniqueSampleID}/RSeQC", mode:'copy'
+        publishDir "${params.outDir}/${uniqueSampleID}/STAR/RSeQC", mode:'copy'
 
         input:
 		val uniqueSampleID

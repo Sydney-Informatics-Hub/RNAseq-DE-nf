@@ -2,20 +2,20 @@ process mergeHtseqCounts {
   
         // where to publish the outputs
         tag "$sampleID runSTARAlign"
-        publishDir "${params.outDir}/STAR", mode:'copy'
+        publishDir "${params.outDir}", mode:'copy'
 
         input:
                 path(allHtseqCountFiles)
 
 
         output:
-                path ("merged_counts.txt")
+                path ("merged_counts_STAR.txt")
 
         shell:
 
         '''
 	# Output file name
-        output_file="merged_counts.txt"
+        output_file="merged_counts_STAR.txt"
 
         # Initialize an associative array to store counts
         declare -A counts

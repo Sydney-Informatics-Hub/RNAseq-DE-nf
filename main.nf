@@ -119,7 +119,7 @@ workflow {
 	
 	uniqueSampleIDsList = uniqueSampleIDs.toList()
 
-	uniqueSampleIDsList.view()
+	//uniqueSampleIDsList.view()
 
 
 	// Split cohort file to collect info for each sample
@@ -160,17 +160,23 @@ fastq_eachLane_ch = checkInputs.out
 
 convertGtfToBED(params.refGtf)
 
-makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
-
-
-// STAR Alignment
 
 // (A) Use available STAR index
 //runSTARAlign(fastq_eachLane_ch,runBbduk_trim.out[0],runBbduk_trim.out[1],params.NCPUS,params.STARRefIndexPath)
 
-// (B) Align
-runSTARAlign(fastq_eachLane_ch,params.NCPUS,makeSTARIndex.out)
 
+def STARIndexPath = "$PWD/${params.outDir}/INDEX/STAR/STARGeneratedIndexPath"
+
+if (!file(STARIndexPath).exists()) {
+
+	// Make STAR index and then align
+	makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
+	runSTARAlign(fastq_eachLane_ch,params.NCPUS,makeSTARIndex.out)	
+} else {
+
+	// Jump to Align
+	runSTARAlign(fastq_eachLane_ch,params.NCPUS,STARIndexPath)
+	}
 
 
 // Merge and Index
