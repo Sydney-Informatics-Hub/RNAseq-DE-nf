@@ -100,7 +100,8 @@ inputs = checkCohort.out
 // See https://training.nextflow.io/basic_training/processes/#inputs 
 	fastqc(inputs)
 	multiqc(fastqc.out[1].collect())
-  bbduk(fastqc.out[1].collect(),inputs)
+  bbduk(params.adapters_bbmap, inputs)
+
 }}
 
 // Print workflow execution summary 

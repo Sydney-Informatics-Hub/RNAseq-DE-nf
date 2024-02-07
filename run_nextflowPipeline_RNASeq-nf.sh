@@ -36,7 +36,7 @@ samples=/scratch/er01/cl9310/1_project/RNAseq-DE-nf/sampleSheet_both_single_pair
 #SalmonRefIndexPath=
 #outDir=results
 #NCPUS=2
-#adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
+adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
 #readlen=
 #strand="reverse"
 
@@ -44,6 +44,6 @@ samples=/scratch/er01/cl9310/1_project/RNAseq-DE-nf/sampleSheet_both_single_pair
 nextflow run main.nf -resume \
         --input ${samples} \
         -profile gadi \
-        --adapters_bbmap ${adapters_bbmap}
+        --adapters_bbmap ${adapters_bbmap} \
         --whoami cl9310 --gadi_account er01 \
         --outDir results

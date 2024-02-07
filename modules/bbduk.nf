@@ -5,12 +5,13 @@ process bbduk {
     publishDir "${params.outDir}/${sampleID}/bbduk/trimmed", mode: 'copy'
 
     input: 
+	path adapters_bbmap
     tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
     
 
     output:
-    path("${sampleID}.R1.trimmed.fastqc.gz")
-    path("${sampleID}.R2.trimmed.fastqc.gz")
+    path("${sampleID}.R1.trimmed.fastq.gz")
+    path("${sampleID}.R2.trimmed.fastq.gz")
 
     script:
     """
@@ -19,6 +20,8 @@ bbduk.sh -Xmx6g \
 	in=${R1} \
 	in2=${R2} \
 	ref=${adapters_bbmap} \
+	out=${sampleID}.R1.trimmed.fastq.gz \
+    out2=${sampleID}.R2.trimmed.fastq.gz \
 	ktrim=r \
 	k=23 \
 	mink=11 \
