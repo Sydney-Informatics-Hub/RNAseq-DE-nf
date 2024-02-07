@@ -24,7 +24,7 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/er01/cl9310/singularity
 
 # Fill in these variables for your run
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/prep_work/run_pipe/sampleSheet.csv
-samples=/scratch/er01/cl9310/2_project/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
+samples=/scratch/er01/cl9310/1_project/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
 
 
 #ref=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.fasta
@@ -44,5 +44,6 @@ samples=/scratch/er01/cl9310/2_project/RNAseq-DE-nf/sampleSheet_both_single_pair
 nextflow run main.nf -resume \
         --input ${samples} \
         -profile gadi \
+        --adapters_bbmap ${adapters_bbmap}
         --whoami cl9310 --gadi_account er01 \
         --outDir results
