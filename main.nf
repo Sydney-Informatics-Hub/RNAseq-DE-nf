@@ -150,17 +150,17 @@ if (!file(STARIndexPath).exists()) {
 
         // Make STAR index and then align
         makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
-        runSTARAlign(inputs,params.NCPUS,makeSTARIndex.out,bbduk.out[0],bbduk.out[1])
+        runSTARAlign(params.NCPUS,makeSTARIndex.out,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
 } else {
 
         // Jump to Align
-        runSTARAlign(inputs,params.NCPUS,STARIndexPath,bbduk.out[0],bbduk.out[1])
+        runSTARAlign(params.NCPUS,STARIndexPath,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
         }
 
 
 
 // Merge lane-bams and Index final bam
-runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out[0].collect(),params.NCPUS)
+runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect(),params.NCPUS)
 
 
 // Run HTSeq-Count

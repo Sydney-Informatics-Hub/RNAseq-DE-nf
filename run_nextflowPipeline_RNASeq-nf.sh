@@ -25,6 +25,8 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/$PROJECT/$(whoami)/singularity
 # Fill in these variables for your run
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
 samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_paired.csv
+#samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_single.csv
+
 
 #ref=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.fasta
 #dict=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.dict

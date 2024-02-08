@@ -7,8 +7,8 @@ process runSamtoolsMergeIndex {
 
 	input:
                 each uniqueSampleID
-                path(sampleID_bams)
-                val(NCPUS)
+                path(sampleID_lane_bam)
+		val(NCPUS)
 
 	output:
 		path ("${uniqueSampleID}.final.bam")

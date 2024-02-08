@@ -5,22 +5,22 @@ process runSTARAlign {
         publishDir "${params.outDir}/${sampleID}/STAR", mode:'copy'
 
         input:
-        	tuple val(sampleID) , val(lane), file(R1_fastq), file(R2_fastq), val(seqcentre), val(platform), val(RUN_TYPE_SINGLE_PAIRED) ,val(library)
-			val(NCPUS)	
-			path STARRefIndexPath
-			path R1_trimmed
-			path R2_trimmed
+		val(NCPUS)	
+		path STARRefIndexPath
+		tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(sampleID_lane_Trimmed_R1_fastq)
+        	tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(sampleID_lane_Trimmed_R2_fastq)
+
 
         output:
-           path ("${sampleID}_${lane}_Aligned.sortedByCoord.out.bam")
-	   path ("${sampleID}_${lane}_SJ.out.tab")
+           	path ("${sampleID}_${Lane}_Aligned.sortedByCoord.out.bam") , emit: sampleID_lane_bam
+	   	path ("${sampleID}_${Lane}_SJ.out.tab")			   , emit: sampleID_lane_SJ_tab
 
         script:
 	
 		"""
 
+
 		flowcell=1
-                #lane=1
 	
 		if [ "${RUN_TYPE_SINGLE_PAIRED}" == 'PAIRED' ]; then
 
@@ -33,12 +33,12 @@ process runSTARAlign {
             		--outBAMsortingBinsN 100 \
             		--quantMode GeneCounts \
             		--readFilesCommand zcat \
-            		--readFilesIn ${R1_trimmed} ${R2_trimmed} \
-            		--outSAMattrRGline ID:flowcell.${lane} PU:flowcell.${lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
+            		--readFilesIn ${sampleID_lane_Trimmed_R1_fastq} ${sampleID_lane_Trimmed_R2_fastq} \
+            		--outSAMattrRGline ID:flowcell.${Lane} PU:flowcell.${Lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
             		--outSAMtype BAM SortedByCoordinate \
             		--outReadsUnmapped Fastx \
             		--outSAMunmapped Within KeepPairs \
-            		--outFileNamePrefix ${sampleID}_${lane}_
+            		--outFileNamePrefix ${sampleID}_${Lane}_
 
 		else
 
@@ -49,11 +49,11 @@ process runSTARAlign {
 			--quantMode GeneCounts \
         		--outBAMsortingBinsN 100 \
 			--readFilesCommand zcat \
-			--readFilesIn ${R1_trimmed} \
-			--outSAMattrRGline ID:flowcell.${lane} PU:flowcell.${lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
+			--readFilesIn ${sampleID_lane_Trimmed_R1_fastq} \
+			--outSAMattrRGline ID:flowcell.${Lane} PU:flowcell.${Lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
 			--outSAMtype BAM SortedByCoordinate \
 			--outReadsUnmapped Fastx \
-			--outFileNamePrefix ${sampleID}_${lane}_
+			--outFileNamePrefix ${sampleID}_${Lane}_
 		
 
 		fi
