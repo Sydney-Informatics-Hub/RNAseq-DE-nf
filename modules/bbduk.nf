@@ -10,8 +10,8 @@ process bbduk {
     	val(NCPUS)
 
     output:
-    	path("${sampleID}.R1.trimmed.fastq.gz")
-    	path("${sampleID}.R2.trimmed.fastq.gz") , optional: true
+    	tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R1.trimmed.fastq.gz")	, emit: sampleID_lane_Trimmed_R1_fastq
+    	tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R2.trimmed.fastq.gz")   , emit: sampleID_lane_Trimmed_R2_fastq
 
     script:
     """
@@ -24,8 +24,8 @@ process bbduk {
 		in=${R1} \
 		in2=${R2} \
 		ref=${adapters_bbmap} \
-		out=${sampleID}.R1.trimmed.fastq.gz \
-    		out2=${sampleID}.R2.trimmed.fastq.gz \
+		out=${sampleID}_${Lane}.R1.trimmed.fastq.gz \
+    		out2=${sampleID}_${Lane}.R2.trimmed.fastq.gz \
 		ktrim=r \
 		k=23 \
 		mink=11 \
@@ -41,7 +41,7 @@ process bbduk {
                 threads=${NCPUS} \
                 in=${R1} \
                 ref=${adapters_bbmap} \
-                out=${sampleID}.R1.trimmed.fastq.gz \
+                out=${sampleID}_${Lane}.R1.trimmed.fastq.gz \
                 ktrim=r \
                 k=23 \
                 mink=11 \
@@ -50,6 +50,8 @@ process bbduk {
                 tbo \
                 overwrite=true \
                 trimpolya=readlen	
+
+	touch ${sampleID}_${Lane}.R2.trimmed.fastq.gz
 
 	fi	
 	
