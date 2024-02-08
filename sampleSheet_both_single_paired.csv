@@ -1,3 +1,0 @@
-sampleID,Lane,R1,R2,SEQUENCING_CENTRE,PLATFORM,RUN_TYPE_SINGLE_PAIRED,LIBRARY
-UHR_Rep3,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
-UHR_Rep2,1,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep2_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep2_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1

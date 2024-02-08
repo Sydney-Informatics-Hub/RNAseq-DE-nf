@@ -22,6 +22,13 @@ include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
 include { bbduk      } from './modules/bbduk.nf'
 
+include { makeSTARIndex                                  } from './modules/makeSTARIndex'
+include { runSTARAlign                                   } from './modules/runSTARAlign'
+include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
+include { runHtseqCount                                   } from './modules/runHtseqCount'
+include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+
+
 // Print a header for your pipeline 
 log.info """\
 
@@ -92,15 +99,80 @@ if ( params.help || params.input == false ){
 // check the existence of input files  
 	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
+//inputs = checkCohort.out
+//		.splitCsv(header: true, sep:",")
+//		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
+
+
+// Create a list of unique sampleIDs
+uniqueSampleIDs = checkCohort.out.flatMap { filePath ->
+                    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }
+                                                }
+                    .distinct()
+uniqueSampleIDsList = uniqueSampleIDs.toList()
+
+
+// To account for missing R2 file when single-end 
+// Define a valid empty file path using $PWD
+def emptyFilePath = "$PWD/empty_file.txt"
+
+// Check if the empty file exists, create it if necessary
+if (!file(emptyFilePath).exists()) {
+    file(emptyFilePath).text = ""
+}
+
 inputs = checkCohort.out
-		.splitCsv(header: true, sep:",")
-		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
+                .splitCsv(header: true, sep:",")
+                .map { row ->
+                def R2File = row.R2 ? file(row.R2) : file(emptyFilePath) // Provide a default empty file path
+                tuple(row.sampleID, row.Lane, file(row.R1), R2File, row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)
+                        }
+
+
+
+
+
 
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	fastqc(inputs)
-	multiqc(fastqc.out[1].collect())
-  bbduk(params.adapters_bbmap, inputs)
+	fastqc(inputs,params.NCPUS)
+	multiqc(fastqc.out.collect())
+
+// Run trimming 
+  	bbduk(params.adapters_bbmap, inputs,params.NCPUS)
+
+
+// Run STAR
+
+def STARIndexPath = "$PWD/${params.outDir}/INDEX/STAR/STARGeneratedIndexPath"
+
+if (!file(STARIndexPath).exists()) {
+
+        // Make STAR index and then align
+        makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
+        runSTARAlign(inputs,params.NCPUS,makeSTARIndex.out,bbduk.out[0],bbduk.out[1])
+} else {
+
+        // Jump to Align
+        runSTARAlign(inputs,params.NCPUS,STARIndexPath,bbduk.out[0],bbduk.out[1])
+        }
+
+
+
+// Merge lane-bams and Index final bam
+runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out[0].collect(),params.NCPUS)
+
+
+// Run HTSeq-Count
+runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
+mergeHtseqCounts(runHtseqCount.out.collect())
+
+
+
+
+
+
+
 
 }}
 

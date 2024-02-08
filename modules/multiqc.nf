@@ -13,9 +13,8 @@ process multiqc {
 
 	// Define output(s)
 	// See: https://www.nextflow.io/docs/latest/process.html#outputs
-	output:
-	path ('multiqc_report.html')
-	path ('multiqc_data')
+	//output:
+	//	path ('multiqc*.html')
 
 	// Define code to execute 
 	// See: https://www.nextflow.io/docs/latest/process.html#script
