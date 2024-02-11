@@ -169,7 +169,7 @@ runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.r
 mergeHtseqCounts(runHtseqCount.out.collect())
 
 // Run Salmon Index and alignment
-makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
+makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
 
 
 

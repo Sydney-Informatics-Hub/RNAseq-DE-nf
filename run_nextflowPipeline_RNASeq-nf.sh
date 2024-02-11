@@ -24,7 +24,7 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/$PROJECT/$(whoami)/singularity
 
 # Fill in these variables for your run
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
-samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_paired.csv
+samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_pairedWithLanes.csv
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_single.csv
 
 
@@ -46,6 +46,7 @@ refGtf=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_da
 outDir=results
 NCPUS=2
 adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
+transcriptFasta=/scratch/er01/cl9310/1_project/transcriptom/transcriptome.fa
 #readlen=
 strand="reverse"
 
@@ -58,7 +59,8 @@ nextflow run main.nf -resume \
         --adapters_bbmap ${adapters_bbmap} \
 	--refFasta ${refFasta} \
 	--refGtf ${refGtf} \
-	--strand ${strand} \
+	--transcriptFasta ${transcriptFasta} \
+        --strand ${strand} \
 	--outDir ${outDir}
         
        
