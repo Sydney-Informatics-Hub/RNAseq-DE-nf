@@ -28,6 +28,7 @@ include { runSamtoolsMergeIndex                          } from './modules/runSa
 include { runHtseqCount                                   } from './modules/runHtseqCount'
 include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 
+include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 
 // Print a header for your pipeline 
 log.info """\
@@ -167,7 +168,8 @@ runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect
 runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
 mergeHtseqCounts(runHtseqCount.out.collect())
 
-
+// Run Salmon Index and alignment
+makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
 
 
 
