@@ -3,7 +3,7 @@
 process makeSalmonIndex {
  
  debug = true //turn to false to stop printing command stdout to screen
-    publishDir "${params.outDir}/INDEX/salmonIndex", mode: 'copy'   
+    publishDir "${params.outDir}/INDEX", mode: 'copy'   
 	
     input:
     path refFasta
@@ -24,7 +24,7 @@ process makeSalmonIndex {
         --threads ${NCPUS} \
         -t gentrome.fasta \
         -d decoys.txt \
-        -i salmon \
+        -i salmonIndex \
         --gencode
 
     """
