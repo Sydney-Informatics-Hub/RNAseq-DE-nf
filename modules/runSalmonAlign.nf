@@ -3,7 +3,7 @@
 process runSalmonAlign {
  
  debug = true //turn to false to stop printing command stdout to screen
-    publishDir "${params.outDir}/${sampleID}/salmon", mode: 'copy'   
+    publishDir "${params.outDir}/${sampleID}/salmon/${Lane}", mode: 'copy'   
 	
     input:
         val(NCPUS)	
