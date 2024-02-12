@@ -47,6 +47,7 @@ outDir=results
 NCPUS=2
 adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
 transcriptFasta=/scratch/er01/cl9310/1_project/transcriptom/transcriptome.fa
+libType=A
 #readlen=
 strand="reverse"
 
@@ -60,6 +61,7 @@ nextflow run main.nf -resume \
 	--refFasta ${refFasta} \
 	--refGtf ${refGtf} \
 	--transcriptFasta ${transcriptFasta} \
+        --libType ${libType} \
         --strand ${strand} \
 	--outDir ${outDir}
         
