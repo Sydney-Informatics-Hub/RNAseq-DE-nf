@@ -28,6 +28,8 @@ include { runSamtoolsMergeIndex                          } from './modules/runSa
 include { runHtseqCount                                   } from './modules/runHtseqCount'
 include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 
+include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
+include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
 
 // Print a header for your pipeline 
 log.info """\
@@ -167,7 +169,19 @@ runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect
 runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
 mergeHtseqCounts(runHtseqCount.out.collect())
 
+// Run Salmon Index and alignment
+def salmonIndex = "$PWD/${params.outDir}/INDEX/salmonIndex"
 
+if (!file(salmonIndex).exists()) {
+
+        // Make salmon index and then align
+        makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
+        runSalmonAlign(params.NCPUS,makeSalmonIndex.out,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+} else {
+
+        // Jump to Align
+        runSalmonAlign(params.NCPUS,salmonIndex,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+        }
 
 
 
