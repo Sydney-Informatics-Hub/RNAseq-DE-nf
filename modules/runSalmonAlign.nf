@@ -6,28 +6,23 @@ process runSalmonAlign {
     publishDir "${params.outDir}/${sampleID}/salmon/${Lane}", mode: 'copy'   
 	
     input:
-        val(NCPUS)	
 		path salmonIndex
         val(libType)
-		tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(sampleID_lane_Trimmed_R1_fastq)
-        tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(sampleID_lane_Trimmed_R2_fastq)
-
+		tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(sampleID_lane_Trimmed_R1_fastq), path(sampleID_lane_Trimmed_R2_fastq)
 
     output:
     path salmon
     
     script:
-    
     """
     salmon quant \
-        --threads ${NCPUS} \
+        --threads ${task.ncpus} \
         -i ${salmonIndex} \
         -l ${libType} \
         -1 ${sampleID_lane_Trimmed_R1_fastq} \
         -2 ${sampleID_lane_Trimmed_R2_fastq} \
         --validateMappings \
         -o salmon
-
     """
 }
 
