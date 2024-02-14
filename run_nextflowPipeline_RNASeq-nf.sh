@@ -27,22 +27,9 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/$PROJECT/$(whoami)/singularity
 samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_pairedWithLanes.csv
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_single.csv
 
-
-#ref=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.fasta
-#dict=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.dict
-#STARRefIndexPath=/g/data/er01/SIH-Gadi-RNAseq/Reference/GRCh38
-
 refFasta=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/chromosome22.fasta
-
 #STARRefIndexPath=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/STAR_index_singularity_star_2.7.11a
-
-
 refGtf=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/chromosome22.gtf
-
-
-
-
-#SalmonRefIndexPath=
 outDir=results
 NCPUS=2
 adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
