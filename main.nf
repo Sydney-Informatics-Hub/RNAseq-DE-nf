@@ -21,11 +21,13 @@ include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
 include { bbduk      } from './modules/bbduk.nf'
+
 include { makeSTARIndex                                  } from './modules/makeSTARIndex'
 include { runSTARAlign                                   } from './modules/runSTARAlign'
 include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
 include { runHtseqCount                                   } from './modules/runHtseqCount'
 include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
 
@@ -99,25 +101,24 @@ if ( params.help || params.input == false ){
 // check the existence of input files  
 	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
+//inputs = checkCohort.out
+//		.splitCsv(header: true, sep:",")
+//		.map { row -> tuple(row.sampleID, row.Lane, file(row.R1), file(row.R2), row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)}
+
+
 // Create a list of unique sampleIDs
-/// HAVING ONLY WORKED ON PASSING BBDUK OUTPUT TO STAR AT THE LANE LEVEL I AM NOT SURE WHY WE NEED THIS
-/// UNIQUE SAMPLE IDS ARE DEFINED IN YOUR INPUT CHANNEL FROM YOUR SAMPLESHEET 
-/// AT WHAT POINT WOULD YOU NEED UNIQUE SAMPLE IDS THAT ARE DISCONNECTED FROM THEIR R1/2 FILES AND METADATA?
-/// IF THIS IS FOR MERGING LANE LEVEL FILES, THEN YOU WOULD NEED TO CREATE A CHANNEL FOR THE BAM MERGING STEP
-/// THAT GROUPS BAMS BASED ON THEIR SAMPLEID AND THEN MERGES THEM 
 uniqueSampleIDs = checkCohort.out.flatMap { filePath ->
-                    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }}
+                    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }
+                                                }
                     .distinct()
 uniqueSampleIDsList = uniqueSampleIDs.toList()
+
 
 // To account for missing R2 file when single-end 
 // Define a valid empty file path using $PWD
 def emptyFilePath = "$PWD/empty_file.txt"
 
 // Check if the empty file exists, create it if necessary
-/// AGAIN, I'M NOT SURE WHY WE NEED THIS
-/// SEE WHAT I DID BELOW LINES 166-171 TO DYNAMICALLY HANDLE OPTIONAL R2 FILE
-/// CREATING EMPTY FILES IS GOING TO AFFECT YOUR INODE LIMITS ON THE FILESYSTEM
 if (!file(emptyFilePath).exists()) {
     file(emptyFilePath).text = ""
 }
@@ -129,84 +130,64 @@ inputs = checkCohort.out
                 tuple(row.sampleID, row.Lane, file(row.R1), R2File, row.SEQUENCING_CENTRE, row.PLATFORM, row.RUN_TYPE_SINGLE_PAIRED, row.LIBRARY)
                         }
 
+
+
+
+
+
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
 	fastqc(inputs,params.NCPUS)
-  /// AS DISCUSSED IT DOESN'T MAKE SENSE TO RUN MULTIQC HERE, AS IT IS NOT THE ONLY QC METRICS BEING CREATED
-  /// JUST RUN AT THE END SO YOU CAN COLLECT ALL THE FASTQC OUTPUTS AND ALL OTHER QC METRICS GENERATED THROUGHOUT
-	//multiqc(fastqc.out.collect())
+	multiqc(fastqc.out.collect())
 
 // Run trimming 
-bbduk(params.adapters_bbmap, inputs,params.NCPUS)
-/// SUGGEST RUNNING FASTQC AGAIN HERE, BUT ON BBDUK OUTPUT 
-/// WILL NEED TO CREATE A SPECIFIC BBDUK_FASTQC CHANNEL, SEPARATE FROM STAR OR SALMON
-/// IF YOU DON'T, YOU'LL CONSUME BBDUK OUTPUT IN THE MULTIQC STEP, AND YOU WON'T BE ABLE TO USE IT FOR STAR OR SALMON
-/// SEE: https://www.nextflow.io/docs/latest/channel.html
+  	bbduk(params.adapters_bbmap, inputs,params.NCPUS)
 
-// Define star/salmon input
-/// THIS IS HOW YOU CAN TAKE THE OUTPUT FROM A PROCESS, AND USE IT AS INPUT TO ANOTHER PROCESS
-/// KEEP IN MIND THAT NEXTFLOW IS BASED ON GROOVY
-/// SO, WHEN YOU'RE WORKING WITH TUPLES IN NEXTFLOW, YOU'RE WORKING WITH GROOVY LISTS
-/// WHEN YOU CAN'T FIND A STRAIGHTFORWARD EXAMPLE IN NEXTFLOW DOCS, LOOK FOR GROOVY EXAMPLES
 
-align_input = bbduk.out.trimmed_fq
-  //.view() //ADDED THIS TO VISUALISE OUT STRUCTURE FOR DEBUGGING PURPOSES
-  .map { tuple ->
-  // Extracting values and paths from the tuple produced by bbduk.out.trimmed_fq
-  def sampleID = tuple[0]
-  def lane = tuple[1]
-  def runType = tuple[2]
-  def platform = tuple[3]  
-  def sequencingCentre = tuple[4]
-  def library = tuple[5]
-  def r1Path = tuple[6]
-  def r2Path = tuple[7]
+// Run STAR
 
-/// THIS WAS TRICKY, TO CAPTURE FLEXIBILITY FOR SINGLE VS PAIRED, NEED TO DEFINE DIFFERENT TUPLES FOR EACH
-// If runType is PAIRED, emit a tuple with both R1 and R2 paths
-    if (runType == "PAIRED") {
-        return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, r2Path]
-    } else {
-        // For SINGLE runs, emit a tuple with only R1 path and an empty string for R2
-        return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, ""]
-    }
-}
+def STARIndexPath = "$PWD/${params.outDir}/INDEX/STAR/STARGeneratedIndexPath"
 
-// Run STAR index and alignment
-/// THIS LOGIC DOESN'T MAKE SENSE. WHY ARE WE RELIANT ON SOMETHING SAVED TO RESULTS? 
-/// SHOULD BE PICKING UP THE INDEX FROM THE REF FASTA DIRECTORY SUPPLIED BY THE USER IF IT EXISTS
-/// CREATING TEMPORARY WORKAROUNDS LIKE THIS CREATE MORE WORK FOR YOU IN THE LONG RUN
-//STAR_ref_index_path = "$PWD/${params.outDir}/INDEX/STAR/STARGeneratedIndexPath"
+if (!file(STARIndexPath).exists()) {
 
-//if (!file(STAR_ref_index_path).exists()) {
         // Make STAR index and then align
-        makeSTARIndex(params.refFasta,params.refGtf)
-//        runSTARAlign(makeSTARIndex.out.STAR_INDEX,align_input)
-
-//} else if (file(STAR_ref_index_path).exists()){
-        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
-//        }
-
-// Merge lane-bams and Index final bam
-//runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect(),params.NCPUS)
-
-// Run HTSeq-Count
-//runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
-//mergeHtseqCounts(runHtseqCount.out.collect())
-
-// Run Salmon Index and alignment
-//def salmonIndex = "$PWD/${params.outDir}/INDEX/salmonIndex"
-
-//if (!file(salmonIndex).exists()) {
-
-        // Make salmon index and then align
-//       makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
-//        runSalmonAlign(params.NCPUS,makeSalmonIndex.out,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//} else {
+        makeSTARIndex(params.refFasta,params.refGtf,params.NCPUS)
+        runSTARAlign(params.NCPUS,makeSTARIndex.out,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+} else {
 
         // Jump to Align
-//        runSalmonAlign(params.NCPUS,salmonIndex,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//        }
+        runSTARAlign(params.NCPUS,STARIndexPath,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+        }
+
+
+
+// Merge lane-bams and Index final bam
+runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect(),params.NCPUS)
+
+
+// Run HTSeq-Count
+runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
+mergeHtseqCounts(runHtseqCount.out.collect())
+
+// Run Salmon Index and alignment
+def salmonIndex = "$PWD/${params.outDir}/INDEX/salmonIndex"
+
+if (!file(salmonIndex).exists()) {
+
+        // Make salmon index and then align
+        makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
+        runSalmonAlign(params.NCPUS,makeSalmonIndex.out,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+} else {
+
+        // Jump to Align
+        runSalmonAlign(params.NCPUS,salmonIndex,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
+        }
+
+
+
+
+
+
 }}
 
 // Print workflow execution summary 
