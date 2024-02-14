@@ -1,34 +1,30 @@
 process makeSTARIndex {
   
         // where to publish the outputs
-        tag "makeSTARIndex"
-        publishDir "${params.outDir}/INDEX/STAR", mode:'copy'
+        tag "makeSTARIndex ${params.refFasta}"
+        publishDir "${params.outDir}", mode:'copy'
 
         input:
-        	path referenceFasta
-		path refGtf
-		val(NCPUS)		
+        path referenceFasta
+		path refGtf	
 
         output:
-           path ("STARGeneratedIndexPath")
+        path ("*"), emit: STAR_ref_index_path
 
         script:
-
+		/// NEED TO BE CONSISTENT IN NAMING BETWEEN INPUT CHANNEL AND VARIABLE DEFINITION
+		/// IF YOU USE refFasta IN INPUT CHANNEL, YOU NEED TO USE refFasta IN VARIABLE DEFINITION
+		/// OTHERWISE, IT IS NOT VISIBLE TO THE SCRIPT BLOCK
+		def refFasta = referenceFasta
         """
-		
-	STAR \
-		--runThreadN ${NCPUS} \
+		STAR \
+			--runThreadN ${task.cpus} \
         	--runMode genomeGenerate \
-       		--genomeDir STARGeneratedIndexPath \
-        	--genomeFastaFiles ${referenceFasta} \
+       		--genomeDir STAR_INDEX/STARGeneratedIndexPath \
+        	--genomeFastaFiles ${refFasta} \
         	--sjdbGTFfile ${refGtf} \
         	--sjdbOverhang 99
-
 	"""
-
-
-
-
 	}
 
 
