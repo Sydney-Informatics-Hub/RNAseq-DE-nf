@@ -1,7 +1,7 @@
 // Define the process
 process fastqc {	
 
-    debug = false //turn to false to stop printing command stdout to screen
+    debug = true //turn to false to stop printing command stdout to screen
     tag "$sampleID fastQC"
     publishDir "${params.outDir}/${sampleID}/FastQC", mode: 'copy'
 
@@ -14,10 +14,13 @@ process fastqc {
 
     script:
     """
+    	mkdir ${sampleID}
+
+
 	if [ "${RUN_TYPE_SINGLE_PAIRED}" == 'PAIRED' ]; then
-    		fastqc -t ${task.cpus}  ${R1} ${R2} 
+    		fastqc -t ${NCPUS}  ${R1} ${R2} 
 	else
-		fastqc -t ${task.cpus}  ${R1}
+		fastqc -t ${NCPUS}  ${R1}
 
 	fi
 	
