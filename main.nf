@@ -131,13 +131,13 @@ inputs = checkCohort.out
 
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	fastqc(inputs,params.NCPUS)
+	fastqc(inputs)
   /// AS DISCUSSED IT DOESN'T MAKE SENSE TO RUN MULTIQC HERE, AS IT IS NOT THE ONLY QC METRICS BEING CREATED
   /// JUST RUN AT THE END SO YOU CAN COLLECT ALL THE FASTQC OUTPUTS AND ALL OTHER QC METRICS GENERATED THROUGHOUT
 	//multiqc(fastqc.out.collect())
 
 // Run trimming 
-bbduk(params.adapters_bbmap, inputs,params.NCPUS)
+bbduk(params.adapters_bbmap, inputs)
 /// SUGGEST RUNNING FASTQC AGAIN HERE, BUT ON BBDUK OUTPUT 
 /// WILL NEED TO CREATE A SPECIFIC BBDUK_FASTQC CHANNEL, SEPARATE FROM STAR OR SALMON
 /// IF YOU DON'T, YOU'LL CONSUME BBDUK OUTPUT IN THE MULTIQC STEP, AND YOU WON'T BE ABLE TO USE IT FOR STAR OR SALMON
@@ -166,7 +166,7 @@ align_input = bbduk.out.trimmed_fq
 // If runType is PAIRED, emit a tuple with both R1 and R2 paths
     if (runType == "PAIRED") {
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, r2Path]
-    } else {
+    } else if (runType == "SINGLE") {
         // For SINGLE runs, emit a tuple with only R1 path and an empty string for R2
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, ""]
     }

@@ -9,7 +9,7 @@ process bbduk {
     	tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
 
     output:
-    	tuple val(sampleID), val(Lane), val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R1.trimmed.fastq.gz"), path("${sampleID}_${Lane}.R2.trimmed.fastq.gz")	, emit: trimmed_fq
+    	tuple val(sampleID), val(Lane), val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R1.trimmed.fastq.gz"), path("${sampleID}_${Lane}.R2.trimmed.fastq.gz"), emit: trimmed_fq
 
     script:
     """
