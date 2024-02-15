@@ -1,7 +1,9 @@
-# Ignore log file
+# Ignore files
 .nextflow.log*
 .nextflow/
 .nextflow/history
+transcriptome.fa
+empty_file.txt
 
 # Ignore generated folders
 results/

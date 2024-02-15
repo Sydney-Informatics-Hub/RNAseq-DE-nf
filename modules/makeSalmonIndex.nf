@@ -8,7 +8,6 @@ process makeSalmonIndex {
     input:
     path refFasta
     path transcriptFasta
-    val(NCPUS)
 
     output:
     path "salmonIndex"
@@ -21,7 +20,7 @@ process makeSalmonIndex {
     cat ${transcriptFasta} ${refFasta} > gentrome.fasta
 
     salmon index \
-        --threads ${NCPUS} \
+        --threads ${task.cpus} \
         -t gentrome.fasta \
         -d decoys.txt \
         -i salmonIndex \

@@ -24,23 +24,15 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/$PROJECT/$(whoami)/singularity
 
 # Fill in these variables for your run
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
+
 samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_pairedWithLanes.csv
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_single.csv
-
-
 #ref=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.fasta
 #dict=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.dict
 #STARRefIndexPath=/g/data/er01/SIH-Gadi-RNAseq/Reference/GRCh38
-
 refFasta=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/chromosome22.fasta
-
 #STARRefIndexPath=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/STAR_index_singularity_star_2.7.11a
-
-
 refGtf=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/chromosome22.gtf
-
-
-
 
 #SalmonRefIndexPath=
 outDir=results
@@ -56,7 +48,6 @@ nextflow run main.nf -resume \
         --input ${samples} \
         -profile gadi \
         --whoami $(whoami) --gadi_account $PROJECT \
-        --NCPUS ${NCPUS} \
         --adapters_bbmap ${adapters_bbmap} \
 	--refFasta ${refFasta} \
 	--refGtf ${refGtf} \

@@ -21,11 +21,11 @@ include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
 include { bbduk      } from './modules/bbduk.nf'
-include { makeSTARIndex                                  } from './modules/makeSTARIndex'
-include { runSTARAlign                                   } from './modules/runSTARAlign'
-include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
-include { runHtseqCount                                   } from './modules/runHtseqCount'
-include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+//include { makeSTARIndex                                  } from './modules/makeSTARIndex'
+//include { runSTARAlign                                   } from './modules/runSTARAlign'
+//include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
+//include { runHtseqCount                                   } from './modules/runHtseqCount'
+//include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
 
@@ -105,22 +105,14 @@ if ( params.help || params.input == false ){
 /// AT WHAT POINT WOULD YOU NEED UNIQUE SAMPLE IDS THAT ARE DISCONNECTED FROM THEIR R1/2 FILES AND METADATA?
 /// IF THIS IS FOR MERGING LANE LEVEL FILES, THEN YOU WOULD NEED TO CREATE A CHANNEL FOR THE BAM MERGING STEP
 /// THAT GROUPS BAMS BASED ON THEIR SAMPLEID AND THEN MERGES THEM 
-uniqueSampleIDs = checkCohort.out.flatMap { filePath ->
-                    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }}
-                    .distinct()
-uniqueSampleIDsList = uniqueSampleIDs.toList()
 
 // To account for missing R2 file when single-end 
 // Define a valid empty file path using $PWD
-def emptyFilePath = "$PWD/empty_file.txt"
 
 // Check if the empty file exists, create it if necessary
 /// AGAIN, I'M NOT SURE WHY WE NEED THIS
 /// SEE WHAT I DID BELOW LINES 166-171 TO DYNAMICALLY HANDLE OPTIONAL R2 FILE
 /// CREATING EMPTY FILES IS GOING TO AFFECT YOUR INODE LIMITS ON THE FILESYSTEM
-if (!file(emptyFilePath).exists()) {
-    file(emptyFilePath).text = ""
-}
 
 inputs = checkCohort.out
                 .splitCsv(header: true, sep:",")
@@ -131,7 +123,7 @@ inputs = checkCohort.out
 
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	fastqc(inputs)
+fastqc(inputs)
   /// AS DISCUSSED IT DOESN'T MAKE SENSE TO RUN MULTIQC HERE, AS IT IS NOT THE ONLY QC METRICS BEING CREATED
   /// JUST RUN AT THE END SO YOU CAN COLLECT ALL THE FASTQC OUTPUTS AND ALL OTHER QC METRICS GENERATED THROUGHOUT
 	//multiqc(fastqc.out.collect())
@@ -171,6 +163,8 @@ align_input = bbduk.out.trimmed_fq
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, ""]
     }
 }
+| groupTuple
+| view
 
 // Run STAR index and alignment
 /// THIS LOGIC DOESN'T MAKE SENSE. WHY ARE WE RELIANT ON SOMETHING SAVED TO RESULTS? 
@@ -180,11 +174,11 @@ align_input = bbduk.out.trimmed_fq
 
 //if (!file(STAR_ref_index_path).exists()) {
         // Make STAR index and then align
-        makeSTARIndex(params.refFasta,params.refGtf)
+//        makeSTARIndex(params.refFasta,params.refGtf)
 //        runSTARAlign(makeSTARIndex.out.STAR_INDEX,align_input)
 
 //} else if (file(STAR_ref_index_path).exists()){
-        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
+//        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
 //        }
 
 // Merge lane-bams and Index final bam
@@ -195,18 +189,10 @@ align_input = bbduk.out.trimmed_fq
 //mergeHtseqCounts(runHtseqCount.out.collect())
 
 // Run Salmon Index and alignment
-//def salmonIndex = "$PWD/${params.outDir}/INDEX/salmonIndex"
 
-//if (!file(salmonIndex).exists()) {
-
-        // Make salmon index and then align
-//       makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
-//        runSalmonAlign(params.NCPUS,makeSalmonIndex.out,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//} else {
-
-        // Jump to Align
-//        runSalmonAlign(params.NCPUS,salmonIndex,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//        }
+        makeSalmonIndex(params.refFasta,params.transcriptFasta)
+        runSalmonAlign(makeSalmonIndex.out,params.libType,align_input)
+        
 }}
 
 // Print workflow execution summary 
