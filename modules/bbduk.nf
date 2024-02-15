@@ -7,11 +7,9 @@ process bbduk {
     input: 
 	path adapters_bbmap
     	tuple val(sampleID), val(Lane), path(R1), path(R2), val(SEQUENCING_CENTR), val(PLATFORM), val(RUN_TYPE_SINGLE_PAIRED), val(LIBRARY)
-    	val(NCPUS)
 
     output:
-    	tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R1.trimmed.fastq.gz")	, emit: sampleID_lane_Trimmed_R1_fastq
-    	tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R2.trimmed.fastq.gz")   , emit: sampleID_lane_Trimmed_R2_fastq
+    	tuple val(sampleID), val(Lane), val(RUN_TYPE_SINGLE_PAIRED), val(PLATFORM), val(SEQUENCING_CENTR), val(LIBRARY), path("${sampleID}_${Lane}.R1.trimmed.fastq.gz"), path("${sampleID}_${Lane}.R2.trimmed.fastq.gz"), emit: trimmed_fq
 
     script:
     """
@@ -20,12 +18,12 @@ process bbduk {
 	if [ "${RUN_TYPE_SINGLE_PAIRED}" == 'PAIRED' ]; then
 	
 	bbduk.sh -Xmx6g \
-		threads=${NCPUS} \
+		threads=${task.cpus} \
 		in=${R1} \
 		in2=${R2} \
 		ref=${adapters_bbmap} \
 		out=${sampleID}_${Lane}.R1.trimmed.fastq.gz \
-    		out2=${sampleID}_${Lane}.R2.trimmed.fastq.gz \
+    	out2=${sampleID}_${Lane}.R2.trimmed.fastq.gz \
 		ktrim=r \
 		k=23 \
 		mink=11 \
@@ -38,7 +36,7 @@ process bbduk {
 	else
 	
 	bbduk.sh -Xmx6g \
-                threads=${NCPUS} \
+                threads=${task.cpus} \
                 in=${R1} \
                 ref=${adapters_bbmap} \
                 out=${sampleID}_${Lane}.R1.trimmed.fastq.gz \
@@ -49,9 +47,7 @@ process bbduk {
                 tpe \
                 tbo \
                 overwrite=true \
-                trimpolya=readlen	
-
-	touch ${sampleID}_${Lane}.R2.trimmed.fastq.gz
+                trimpolya=readlen
 
 	fi	
 	
