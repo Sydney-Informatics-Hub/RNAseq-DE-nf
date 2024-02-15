@@ -21,11 +21,11 @@ include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
 include { bbduk      } from './modules/bbduk.nf'
-include { makeSTARIndex                                  } from './modules/makeSTARIndex'
-include { runSTARAlign                                   } from './modules/runSTARAlign'
-include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
-include { runHtseqCount                                   } from './modules/runHtseqCount'
-include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+//include { makeSTARIndex                                  } from './modules/makeSTARIndex'
+//include { runSTARAlign                                   } from './modules/runSTARAlign'
+//include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
+//include { runHtseqCount                                   } from './modules/runHtseqCount'
+//include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
 
@@ -171,6 +171,8 @@ align_input = bbduk.out.trimmed_fq
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, ""]
     }
 }
+| groupTuple
+| view
 
 // Run STAR index and alignment
 /// THIS LOGIC DOESN'T MAKE SENSE. WHY ARE WE RELIANT ON SOMETHING SAVED TO RESULTS? 
@@ -180,11 +182,11 @@ align_input = bbduk.out.trimmed_fq
 
 //if (!file(STAR_ref_index_path).exists()) {
         // Make STAR index and then align
-        makeSTARIndex(params.refFasta,params.refGtf)
+//        makeSTARIndex(params.refFasta,params.refGtf)
 //        runSTARAlign(makeSTARIndex.out.STAR_INDEX,align_input)
 
 //} else if (file(STAR_ref_index_path).exists()){
-        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
+//        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
 //        }
 
 // Merge lane-bams and Index final bam
@@ -195,18 +197,10 @@ align_input = bbduk.out.trimmed_fq
 //mergeHtseqCounts(runHtseqCount.out.collect())
 
 // Run Salmon Index and alignment
-//def salmonIndex = "$PWD/${params.outDir}/INDEX/salmonIndex"
 
-//if (!file(salmonIndex).exists()) {
-
-        // Make salmon index and then align
-//       makeSalmonIndex(params.refFasta,params.transcriptFasta,params.NCPUS)
-//        runSalmonAlign(params.NCPUS,makeSalmonIndex.out,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//} else {
-
-        // Jump to Align
-//        runSalmonAlign(params.NCPUS,salmonIndex,params.libType,bbduk.out.sampleID_lane_Trimmed_R1_fastq, bbduk.out.sampleID_lane_Trimmed_R2_fastq)
-//        }
+        makeSalmonIndex(params.refFasta,params.transcriptFasta)
+        runSalmonAlign(makeSalmonIndex.out,params.libType,align_input)
+        
 }}
 
 // Print workflow execution summary 
