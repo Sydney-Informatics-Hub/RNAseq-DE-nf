@@ -105,22 +105,14 @@ if ( params.help || params.input == false ){
 /// AT WHAT POINT WOULD YOU NEED UNIQUE SAMPLE IDS THAT ARE DISCONNECTED FROM THEIR R1/2 FILES AND METADATA?
 /// IF THIS IS FOR MERGING LANE LEVEL FILES, THEN YOU WOULD NEED TO CREATE A CHANNEL FOR THE BAM MERGING STEP
 /// THAT GROUPS BAMS BASED ON THEIR SAMPLEID AND THEN MERGES THEM 
-uniqueSampleIDs = checkCohort.out.flatMap { filePath ->
-                    file(filePath).text.readLines().drop(1).collect { line -> line.split(',')[0] }}
-                    .distinct()
-uniqueSampleIDsList = uniqueSampleIDs.toList()
 
 // To account for missing R2 file when single-end 
 // Define a valid empty file path using $PWD
-def emptyFilePath = "$PWD/empty_file.txt"
 
 // Check if the empty file exists, create it if necessary
 /// AGAIN, I'M NOT SURE WHY WE NEED THIS
 /// SEE WHAT I DID BELOW LINES 166-171 TO DYNAMICALLY HANDLE OPTIONAL R2 FILE
 /// CREATING EMPTY FILES IS GOING TO AFFECT YOUR INODE LIMITS ON THE FILESYSTEM
-if (!file(emptyFilePath).exists()) {
-    file(emptyFilePath).text = ""
-}
 
 inputs = checkCohort.out
                 .splitCsv(header: true, sep:",")
@@ -131,7 +123,7 @@ inputs = checkCohort.out
 
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
-	fastqc(inputs)
+fastqc(inputs)
   /// AS DISCUSSED IT DOESN'T MAKE SENSE TO RUN MULTIQC HERE, AS IT IS NOT THE ONLY QC METRICS BEING CREATED
   /// JUST RUN AT THE END SO YOU CAN COLLECT ALL THE FASTQC OUTPUTS AND ALL OTHER QC METRICS GENERATED THROUGHOUT
 	//multiqc(fastqc.out.collect())
