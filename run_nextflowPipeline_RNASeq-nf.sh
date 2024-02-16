@@ -36,7 +36,6 @@ refGtf=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_da
 
 #SalmonRefIndexPath=
 outDir=results
-NCPUS=2
 adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
 transcriptFasta=/scratch/er01/cl9310/1_project/transcriptom/transcriptome.fa
 libType=A
@@ -55,9 +54,4 @@ nextflow run main.nf -resume \
         --libType ${libType} \
         --strand ${strand} \
 	--outDir ${outDir}
-        
-       
-
-#UHR_Rep2,2,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz,/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
-
         
