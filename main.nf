@@ -99,20 +99,7 @@ if ( params.help || params.input == false ){
 // check the existence of input files  
 	checkCohort(Channel.fromPath(params.input, checkIfExists: true))
 
-// Create a list of unique sampleIDs
-/// HAVING ONLY WORKED ON PASSING BBDUK OUTPUT TO STAR AT THE LANE LEVEL I AM NOT SURE WHY WE NEED THIS
-/// UNIQUE SAMPLE IDS ARE DEFINED IN YOUR INPUT CHANNEL FROM YOUR SAMPLESHEET 
-/// AT WHAT POINT WOULD YOU NEED UNIQUE SAMPLE IDS THAT ARE DISCONNECTED FROM THEIR R1/2 FILES AND METADATA?
-/// IF THIS IS FOR MERGING LANE LEVEL FILES, THEN YOU WOULD NEED TO CREATE A CHANNEL FOR THE BAM MERGING STEP
-/// THAT GROUPS BAMS BASED ON THEIR SAMPLEID AND THEN MERGES THEM 
-
-// To account for missing R2 file when single-end 
-// Define a valid empty file path using $PWD
-
-// Check if the empty file exists, create it if necessary
-/// AGAIN, I'M NOT SURE WHY WE NEED THIS
-/// SEE WHAT I DID BELOW LINES 166-171 TO DYNAMICALLY HANDLE OPTIONAL R2 FILE
-/// CREATING EMPTY FILES IS GOING TO AFFECT YOUR INODE LIMITS ON THE FILESYSTEM
+// make a input channel and map all tuples
 
 inputs = checkCohort.out
                 .splitCsv(header: true, sep:",")
@@ -124,23 +111,13 @@ inputs = checkCohort.out
 // Run fastqc
 // See https://training.nextflow.io/basic_training/processes/#inputs 
 fastqc(inputs)
-  /// AS DISCUSSED IT DOESN'T MAKE SENSE TO RUN MULTIQC HERE, AS IT IS NOT THE ONLY QC METRICS BEING CREATED
-  /// JUST RUN AT THE END SO YOU CAN COLLECT ALL THE FASTQC OUTPUTS AND ALL OTHER QC METRICS GENERATED THROUGHOUT
+
 	//multiqc(fastqc.out.collect())
 
 // Run trimming 
 bbduk(params.adapters_bbmap, inputs)
-/// SUGGEST RUNNING FASTQC AGAIN HERE, BUT ON BBDUK OUTPUT 
-/// WILL NEED TO CREATE A SPECIFIC BBDUK_FASTQC CHANNEL, SEPARATE FROM STAR OR SALMON
-/// IF YOU DON'T, YOU'LL CONSUME BBDUK OUTPUT IN THE MULTIQC STEP, AND YOU WON'T BE ABLE TO USE IT FOR STAR OR SALMON
-/// SEE: https://www.nextflow.io/docs/latest/channel.html
 
 // Define star/salmon input
-/// THIS IS HOW YOU CAN TAKE THE OUTPUT FROM A PROCESS, AND USE IT AS INPUT TO ANOTHER PROCESS
-/// KEEP IN MIND THAT NEXTFLOW IS BASED ON GROOVY
-/// SO, WHEN YOU'RE WORKING WITH TUPLES IN NEXTFLOW, YOU'RE WORKING WITH GROOVY LISTS
-/// WHEN YOU CAN'T FIND A STRAIGHTFORWARD EXAMPLE IN NEXTFLOW DOCS, LOOK FOR GROOVY EXAMPLES
-
 align_input = bbduk.out.trimmed_fq
   //.view() //ADDED THIS TO VISUALISE OUT STRUCTURE FOR DEBUGGING PURPOSES
   .map { tuple ->
@@ -154,8 +131,6 @@ align_input = bbduk.out.trimmed_fq
   def r1Path = tuple[6]
   def r2Path = tuple[7]
 
-/// THIS WAS TRICKY, TO CAPTURE FLEXIBILITY FOR SINGLE VS PAIRED, NEED TO DEFINE DIFFERENT TUPLES FOR EACH
-// If runType is PAIRED, emit a tuple with both R1 and R2 paths
     if (runType == "PAIRED") {
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, r2Path]
     } else if (runType == "SINGLE") {
@@ -164,12 +139,9 @@ align_input = bbduk.out.trimmed_fq
     }
 }
 | groupTuple
-| view
 
 // Run STAR index and alignment
-/// THIS LOGIC DOESN'T MAKE SENSE. WHY ARE WE RELIANT ON SOMETHING SAVED TO RESULTS? 
-/// SHOULD BE PICKING UP THE INDEX FROM THE REF FASTA DIRECTORY SUPPLIED BY THE USER IF IT EXISTS
-/// CREATING TEMPORARY WORKAROUNDS LIKE THIS CREATE MORE WORK FOR YOU IN THE LONG RUN
+
 //STAR_ref_index_path = "$PWD/${params.outDir}/INDEX/STAR/STARGeneratedIndexPath"
 
 //if (!file(STAR_ref_index_path).exists()) {
