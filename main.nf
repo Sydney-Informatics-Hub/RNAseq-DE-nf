@@ -21,13 +21,17 @@ include { checkCohort} from './modules/checkCohort.nf'
 include { fastqc     } from './modules/fastqc.nf'
 include { multiqc    } from './modules/multiqc.nf'
 include { bbduk      } from './modules/bbduk.nf'
-//include { makeSTARIndex                                  } from './modules/makeSTARIndex'
-//include { runSTARAlign                                   } from './modules/runSTARAlign'
-//include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
-//include { runHtseqCount                                   } from './modules/runHtseqCount'
-//include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+include { makeSTARIndex                                  } from './modules/makeSTARIndex'
+include { runSTARAlign                                   } from './modules/runSTARAlign'
+include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
+include { runHtseqCount                                   } from './modules/runHtseqCount'
+include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
+include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
+
+include { convertGtfToBED                                } from './modules/convertGtfToBED'
+include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
 // Print a header for your pipeline 
 log.info """\
@@ -138,7 +142,8 @@ align_input = bbduk.out.trimmed_fq
         return [sampleID, lane, runType, platform, sequencingCentre, library, r1Path, ""]
     }
 }
-| groupTuple
+
+alignmentInputSalmon = align_input.groupTuple()
 
 // Run STAR index and alignment
 
@@ -146,25 +151,62 @@ align_input = bbduk.out.trimmed_fq
 
 //if (!file(STAR_ref_index_path).exists()) {
         // Make STAR index and then align
-//        makeSTARIndex(params.refFasta,params.refGtf)
-//        runSTARAlign(makeSTARIndex.out.STAR_INDEX,align_input)
+        makeSTARIndex(params.refFasta,params.refGtf)
+        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
 
 //} else if (file(STAR_ref_index_path).exists()){
-//        runSTARAlign(makeSTARIndex.out.STAR_ref_index_path,align_input)
-//        }
+ //       runSTARAlign(STAR_ref_index_path,align_input)
+ //       }
+
+
+
+samtoolsMergeInput = runSTARAlign.out.sample_lane_bam
+  //.view() //ADDED THIS TO VISUALISE OUT STRUCTURE FOR DEBUGGING PURPOSES
+  .map { tuple ->
+  // Extracting values and paths from the tuple produced by runSTARAlign.out.sample_lane_bam
+  def sampleID = tuple[0]
+  def path_bam = tuple[1]
+  def path_SJ = tuple[2]
+
+
+  return [sampleID, path_bam, path_SJ]
+
+} | groupTuple()
+
 
 // Merge lane-bams and Index final bam
-//runSamtoolsMergeIndex(uniqueSampleIDs,runSTARAlign.out.sampleID_lane_bam.collect(),params.NCPUS)
+runSamtoolsMergeIndex(samtoolsMergeInput)
+
+
+merged_input=runSamtoolsMergeIndex.out.final_bam
+  //.view()
+  .map { tuple ->
+  // Extracting values and paths from the tuple produced by runSamtoolsMergeIndex.out.final_bam
+  def sampleID = tuple[0]
+  def pathBam = tuple[1]
+  def pathBamBai = tuple[2]
+
+  return [sampleID, pathBam, pathBamBai]
+}
 
 // Run HTSeq-Count
-//runHtseqCount(runSamtoolsMergeIndex.out[2],runSamtoolsMergeIndex.out[0],params.refGtf,params.strand)
-//mergeHtseqCounts(runHtseqCount.out.collect())
+runHtseqCount(merged_input,params.refGtf,params.strand)
+
+mergeHtseqCounts(runHtseqCount.out.sampleIDCounts.collect())
+
 
 // Run Salmon Index and alignment
 
         makeSalmonIndex(params.refFasta,params.transcriptFasta)
         runSalmonAlign(makeSalmonIndex.out,params.libType,align_input)
         
+// Create PCA 
+createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
+
+// Create BED and use ot for STAR metrics
+convertGtfToBED(params.refGtf)
+getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
+
 }}
 
 // Print workflow execution summary 

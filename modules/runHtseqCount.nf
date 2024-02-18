@@ -1,25 +1,25 @@
 process runHtseqCount {
 
         // where to publish the outputs
-        tag "$uniqueSampleID runHtseqCount"
-        publishDir "${params.outDir}/${uniqueSampleID}/STAR", mode:'copy'
+        tag "$sampleID runHtseqCount"
+        publishDir "${params.outDir}/${sampleID}/STAR", mode:'copy'
 
         input:
-			val uniqueSampleID			
-			path uniqueSampleID_bam
+			tuple val(sampleID), path(final_bam_file), path(final_bam_index)
 			path refGtf
-			val(strand)
+			val strand
 
 
 
 	output:
-		path ("${uniqueSampleID}.counts")
+		path ("${sampleID}.counts"), emit: sampleIDCounts
 
         script:
 	
 		"""
-		htseq-count -f bam -r pos --mode=union -s ${strand} ${uniqueSampleID_bam} ${refGtf} > ${uniqueSampleID}.counts	
+		 htseq-count -f bam -r pos --mode=union -s ${strand} ${final_bam_file} ${refGtf} > ${sampleID}.counts	
 
+		#touch ${sampleID}.counts
 		"""
 	
 	}
