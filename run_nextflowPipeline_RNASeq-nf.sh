@@ -24,9 +24,11 @@ export NXF_SINGULARITY_CACHEDIR=/scratch/$PROJECT/$(whoami)/singularity
 
 # Fill in these variables for your run
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_both_single_paired.csv
-
-samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_pairedWithLanes.csv
+#samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_pairedWithLanes.csv
 #samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_single.csv
+samples=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/RNAseq-DE-nf/sampleSheet_all_paired.csv
+
+
 #ref=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.fasta
 #dict=/g/data/er01/SIH-HPC-WGS/Reference/hs38DH.dict
 #STARRefIndexPath=/g/data/er01/SIH-Gadi-RNAseq/Reference/GRCh38
@@ -35,12 +37,14 @@ refFasta=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_
 refGtf=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/chromosome22.gtf
 
 #SalmonRefIndexPath=
-outDir=results
+outDir=results_all_paired_UHR_Rep1L1L2_for_PCA
 adapters_bbmap=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/test_data_2024/adapters.fa
 transcriptFasta=/scratch/er01/cl9310/1_project/transcriptom/transcriptome.fa
 libType=A
 #readlen=
 strand="reverse"
+samples_info=/scratch/er01/ndes8648/pipeline_work/nextflow/INFRA-121-RNASeq-DE/iterations/090224_PCA/tutorial/data-carpentry-rnaseq/data/sample_info_actual_data_all_samples.tsv
+
 
 # Run the pipeline 
 nextflow run main.nf -resume \
@@ -53,5 +57,6 @@ nextflow run main.nf -resume \
 	--transcriptFasta ${transcriptFasta} \
         --libType ${libType} \
         --strand ${strand} \
-	--outDir ${outDir}
+	--outDir ${outDir} \
+        --samples_info ${samples_info}
         

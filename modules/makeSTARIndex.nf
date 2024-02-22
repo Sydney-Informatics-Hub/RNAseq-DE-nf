@@ -9,7 +9,7 @@ process makeSTARIndex {
 		path refGtf	
 
         output:
-        path ("*"), emit: STAR_ref_index_path
+        path ("STARGeneratedIndexPath"), emit: STAR_ref_index_path
 
         script:
 		/// NEED TO BE CONSISTENT IN NAMING BETWEEN INPUT CHANNEL AND VARIABLE DEFINITION
@@ -20,7 +20,7 @@ process makeSTARIndex {
 		STAR \
 			--runThreadN ${task.cpus} \
         	--runMode genomeGenerate \
-       		--genomeDir STAR_INDEX/STARGeneratedIndexPath \
+       		--genomeDir STARGeneratedIndexPath \
         	--genomeFastaFiles ${refFasta} \
         	--sjdbGTFfile ${refGtf} \
         	--sjdbOverhang 99

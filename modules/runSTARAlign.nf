@@ -12,15 +12,14 @@ input:
 output:
 /// I CHANGED THIS TO CAPTURE SINGLE AND PAIRED END READS 
 /// AS IT WAS, IT FAILS WHEN R2 IS NULL AS YOU HAD SPECIFIED $LANE IN THE OUTPUT PATH
-    path ("${sampleID}_*Aligned.sortedByCoord.out.bam") , emit: sampleID_lane_bam
-	path ("${sampleID}_*SJ.out.tab")			   , emit: sampleID_lane_SJ_tab
+    tuple val(sampleID), path ("${sampleID}_${lane}_Aligned.sortedByCoord.out.bam"), path ("${sampleID}_${lane}_SJ.out.tab") , emit: sample_lane_bam
 
 script:
 	/// ORDER OF THESE DEFINITIONS IS BASED ON INPUT ORDER ABOVE
 	/// YOU CAN TEST THIS BY SWAPPING val(runType) WITH val(platform) IN THE INPUT SECTION
 	/// AND SEEING HOW THE SCRIPT FAILS
 	def sampleID = sampleID
-	def Lane = lane
+	def lane = lane
 	def runType = runType
 	def platform = platform
 	def seqcentre = sequencingCentre
@@ -36,36 +35,41 @@ script:
 		# Mapping
 		if [ ${runType} == 'PAIRED' ]; then
 
-		STAR \
+		 STAR \
             --runThreadN ${task.cpus} \
             --outBAMsortingThreadN ${task.cpus} \
-            --genomeDir STAR_INDEX/STARGeneratedIndexPath \
+            --genomeDir STARGeneratedIndexPath \
             --outBAMsortingBinsN 100 \
             --quantMode GeneCounts \
             --readFilesCommand zcat \
             --readFilesIn ${R1Path} ${R2Path} \
-            --outSAMattrRGline ID:flowcell.${Lane} PU:flowcell.${Lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
+            --outSAMattrRGline ID:flowcell.${lane} PU:flowcell.${lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
             --outSAMtype BAM SortedByCoordinate \
             --outReadsUnmapped Fastx \
             --outSAMunmapped Within KeepPairs \
-            --outFileNamePrefix ${sampleID}_${Lane}_
+            --outFileNamePrefix ${sampleID}_${lane}_
 
 	else
 
-	STAR \
+	 STAR \
 		--runThreadN ${task.cpus} \
 		--outBAMsortingThreadN ${task.cpus} \
-   		--genomeDir STAR_INDEX/STARGeneratedIndexPath \
+   		--genomeDir STARGeneratedIndexPath \
 		--quantMode GeneCounts \
     	--outBAMsortingBinsN 100 \
 		--readFilesCommand zcat \
 		--readFilesIn ${R1Path} ${R2Path} \
-		--outSAMattrRGline ID:flowcell.${Lane} PU:flowcell.${Lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
+		--outSAMattrRGline ID:flowcell.${lane} PU:flowcell.${lane}.${sampleID} SM:${sampleID} PL:${platform} CN:${seqcentre} LB:${library} \
 		--outSAMtype BAM SortedByCoordinate \
 		--outReadsUnmapped Fastx \
-		--outFileNamePrefix ${sampleID}_${Lane}_
+		--outFileNamePrefix ${sampleID}_${lane}_
 		
 	fi
+
+
+	#touch ${sampleID}_${lane}_Aligned.sortedByCoord.out.bam
+	#touch ${sampleID}_${lane}_SJ.out.tab
+
 		"""
 	
 	}

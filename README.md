@@ -72,9 +72,10 @@ You will need to create a sample sheet with information about the samples you ar
 
 ```csv
 sampleID,Lane,R1,R2,SEQUENCING_CENTRE,PLATFORM,RUN_TYPE_SINGLE_PAIRED,LIBRARY
-SAMPLEID1,sample1_1.fastq.gz,sample1_2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
-SAMPLEID2,sample2_1.fastq.gz,sample2_2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
-SAMPLEID2,sample2.fastq.gz,,KCCG,ILLUMINA,SINGLE,1
+SAMPLEID1,1,sample1_1_R1.fastq.gz,sample1_1_R2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+SAMPLEID2,1,sample2_1_R1.fastq.gz,sample2_1_R2.fastq.gz,KCCG,ILLUMINA,PAIRED,1
+SAMPLEID2,2,sample2_2_R1.fastq.gz,sample2_2_R2.fastq.gz,KCCG,ILLUMINA,SINGLE,1
+SAMPLEID3,1,sample2_1.fastq.gz,,KCCG,ILLUMINA,SINGLE,1
 ```
 When you run the pipeline, you will use the mandatory `--input` parameter to specify the location and name of the input sample sheet file: 
 ```
@@ -121,9 +122,11 @@ The minimal run command for executing this pipeline is:
 nextflow run main.nf --input samples.csv \
                      --refFasta /path/to/ref.fasta --refGtf /path/to/ref.gtf \
                      --adapters_bbmap /path/to/adapters_for_bbmap.txt \
-                     --strand {forward/reverse}
+                     --strand {forward/reverse} \
+                     --samples_info {meta_file.txt}
                      
 ```
+**Note**: The `strand` information will be retrieved from the `fastq sequence` and the samples-grouping information provided by the `samples_info` file will be integrated in the `samples.csv` ***(Work in progress)***
 
 By default, this will generate `work` directory, `results` output directory and a `runInfo` run metrics directory inside the results directory. 
 
@@ -142,7 +145,8 @@ To be updated
 - `--adapters_bbmap` Full path to the fasta file containing adapter sequences for adapter trimming step
 - `--refFasta` Full path and name of reference genome (fasta format)
 - `--refGtf` Full path and name of reference genome annotation (fasta format)
-- `--strand` Name of the results directory (default: `results`)
+- `--strand` strand information (forward/reverse)
+- `--samples_info` Name of the results directory (default: `results`)
 
 
 **Optional parameters**  
@@ -163,15 +167,11 @@ The following directories will be created inside every sample directory
   - bbduk: Trimmed fastq files for 3' adapters and poly A tails.
   - STAR: BAM per FASTQ pair and sample level BAMs.
     - HTSeq counts per sample level BAM
+    - Merged HTSeq counts (all samples) matrix 
   - Salmon:   
-
-Two files containing count matrices from the respective tools are created in the `results` folder:  
-- STAR_merged_counts.txt
-- Salmon_merged_counts.txt  
-
-
-  
-
+    - Counts per sample level 
+    - Merged counts matrix 
+  - PCA generated from merged HTSeq counts matrix
 
 ## Infrastructure usage and recommendations
 This pipeline has been successfully implemented on [NCI Gadi HPC](https://nci.org.au/our-systems/hpc-systems) using a infrastructure-specific config. 

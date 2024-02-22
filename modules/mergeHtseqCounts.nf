@@ -9,7 +9,7 @@ process mergeHtseqCounts {
 
 
         output:
-                path ("merged_counts_STAR.txt")
+                path ("final_merged_counts_STAR.txt") , emit:merged_counts_STAR
 
         shell:
 
@@ -51,6 +51,8 @@ process mergeHtseqCounts {
 	for gene_id in "${!counts[@]}"; do
 		    echo -e "$gene_id${counts[$gene_id]}" >> "$output_file"
 	done
+
+        tr -s ' ' '\t' < ${output_file} > final_${output_file}
 
 
 	'''
