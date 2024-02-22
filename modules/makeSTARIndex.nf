@@ -12,9 +12,7 @@ process makeSTARIndex {
         path ("STARGeneratedIndexPath"), emit: STAR_ref_index_path
 
         script:
-		/// NEED TO BE CONSISTENT IN NAMING BETWEEN INPUT CHANNEL AND VARIABLE DEFINITION
-		/// IF YOU USE refFasta IN INPUT CHANNEL, YOU NEED TO USE refFasta IN VARIABLE DEFINITION
-		/// OTHERWISE, IT IS NOT VISIBLE TO THE SCRIPT BLOCK
+
 		def refFasta = referenceFasta
         """
 		STAR \

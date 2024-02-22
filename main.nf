@@ -33,7 +33,7 @@ include { runTximportCount                              } from './modules/runTxi
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
 
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
-include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
+//include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
 // Print a header for your pipeline 
 log.info """\
@@ -125,9 +125,7 @@ bbduk(params.adapters_bbmap, inputs)
 
 // Define star/salmon input
 align_input = bbduk.out.trimmed_fq
-  //.view() //ADDED THIS TO VISUALISE OUT STRUCTURE FOR DEBUGGING PURPOSES
   .map { tuple ->
-  // Extracting values and paths from the tuple produced by bbduk.out.trimmed_fq
   def sampleID = tuple[0]
   def lane = tuple[1]
   def runType = tuple[2]
@@ -198,9 +196,8 @@ mergeHtseqCounts(runHtseqCount.out.sampleIDCounts.collect())
 
 
 // Run Salmon Index and alignment
-
-        makeSalmonIndex(params.refFasta,params.transcriptFasta)
-        runSalmonAlign(makeSalmonIndex.out,params.libType,alignmentInputSalmon)
+makeSalmonIndex(params.refFasta,params.transcriptFasta)
+runSalmonAlign(makeSalmonIndex.out,params.libType,alignmentInputSalmon)
         
 // Create tx2gene file (transcript to gene mapping)
 makeTx2geneFile(params.refGtf)

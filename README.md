@@ -30,7 +30,7 @@
 RNASeq-DE-nf is a pipeline that pre-processes Illumina RNA sequencing data for differential expression (raw FASTQ to counts). The pipeline is written in Nextflow and uses Singularity to run containerised tools.  
 
 The steps in this pipeline include:
-1. QC of raw FASTQs (Fastqc -> multiQC)
+1. QC of raw FASTQs (Fastqc)
 2. Trim raw FASTQs (bbduk)
 3. Mapping with STAR aligner 
   -  Alignment (Fastq-to-bam)
@@ -83,7 +83,7 @@ When you run the pipeline, you will use the mandatory `--input` parameter to spe
 ```
 
 ### 2. Prepare the reference materials 
-
+The reference materials for this script to be performed precisely includes the reference genome for the target organisim (reffasta), a Gene Transfer Format (GTF) (refGtf), and a transcritome fasta file (transcriptFasta). 
 
 
 ### 3. Clone this repository 
@@ -147,6 +147,8 @@ To be updated
 - `--refGtf` Full path and name of reference genome annotation (fasta format)
 - `--strand` strand information (forward/reverse)
 - `--samples_info` Name of the results directory (default: `results`)
+- `--transcriptFasta` Full path of transcriptome file ( fasta format)
+- `--libType` Sequencing library type for Salmon alignment (default: `A`)
 
 
 **Optional parameters**  
