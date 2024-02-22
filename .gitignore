@@ -4,7 +4,7 @@
 .nextflow/history
 transcriptome.fa
 empty_file.txt
-
+results_all_paired_UHR_Rep1L1L2_for_PCA
 # Ignore generated folders
 results/
 work/

@@ -28,6 +28,8 @@ include { runHtseqCount                                   } from './modules/runH
 include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
+include { makeTx2geneFile                               } from './modules/makeTx2geneFile.nf'
+include { runTximportCount                              } from './modules/runTximportCount.nf'
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
 
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
@@ -198,14 +200,21 @@ mergeHtseqCounts(runHtseqCount.out.sampleIDCounts.collect())
 // Run Salmon Index and alignment
 
         makeSalmonIndex(params.refFasta,params.transcriptFasta)
-        runSalmonAlign(makeSalmonIndex.out,params.libType,align_input)
+        runSalmonAlign(makeSalmonIndex.out,params.libType,alignmentInputSalmon)
         
+// Create tx2gene file (transcript to gene mapping)
+makeTx2geneFile(params.refGtf)
+
+// Run Tximport count
+runTximportCount(runSalmonAlign.out, makeTx2geneFile.out)
+
+
 // Create PCA 
 createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
 
 // Create BED and use ot for STAR metrics
 convertGtfToBED(params.refGtf)
-getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
+//getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
 
 }}
 
