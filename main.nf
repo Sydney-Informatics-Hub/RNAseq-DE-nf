@@ -30,8 +30,8 @@ include { makeSalmonIndex                                } from './modules/makeS
 include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
 include { makeTx2geneFile                               } from './modules/makeTx2geneFile.nf'
 include { runTximportCount                              } from './modules/runTximportCount.nf'
+include { mergeSalmonCounts                              } from './modules/mergeSalmonCounts.nf'
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
-
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
 //include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
@@ -205,6 +205,8 @@ makeTx2geneFile(params.refGtf)
 // Run Tximport count
 runTximportCount(runSalmonAlign.out, makeTx2geneFile.out)
 
+// Merge counts together
+mergeSalmonCounts(runTximportCount.out.counts_gene.collect())
 
 // Create PCA 
 createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
