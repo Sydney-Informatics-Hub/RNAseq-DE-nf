@@ -34,7 +34,7 @@ include { mergeSalmonCounts                              } from './modules/merge
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
 include { createSalmonPCA                                } from './modules/createSalmonPCA.nf'
-//include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
+include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
 // Print a header for your pipeline 
 log.info """\
@@ -198,6 +198,7 @@ mergeHtseqCounts(runHtseqCount.out.sampleIDCounts.collect())
 
 // Run Salmon Index and alignment
 makeSalmonIndex(params.refFasta,params.transcriptFasta)
+
 runSalmonAlign(makeSalmonIndex.out,params.libType,alignmentInputSalmon)
         
 // Create tx2gene file (transcript to gene mapping)
@@ -211,11 +212,13 @@ mergeSalmonCounts(runTximportCount.out.counts_gene.collect())
 
 // Create PCA 
 createSalmonPCA(mergeSalmonCounts.out.merged_salmon_counts, params.samples_info)
-//createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
+
+createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
 
 // Create BED and use ot for STAR metrics
 convertGtfToBED(params.refGtf)
-//getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
+
+getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
 
 }}
 
