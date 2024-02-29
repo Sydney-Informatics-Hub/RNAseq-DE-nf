@@ -24,15 +24,16 @@ include { bbduk      } from './modules/bbduk.nf'
 include { makeSTARIndex                                  } from './modules/makeSTARIndex'
 include { runSTARAlign                                   } from './modules/runSTARAlign'
 include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
-include { runHtseqCount                                   } from './modules/runHtseqCount'
-include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+include { runHtseqCount                                  } from './modules/runHtseqCount'
+include { mergeHtseqCounts                               } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
-include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
-include { makeTx2geneFile                               } from './modules/makeTx2geneFile.nf'
-include { runTximportCount                              } from './modules/runTximportCount.nf'
+include { runSalmonAlign                                 } from './modules/runSalmonAlign.nf'
+include { makeTx2geneFile                                } from './modules/makeTx2geneFile.nf'
+include { runTximportCount                               } from './modules/runTximportCount.nf'
 include { mergeSalmonCounts                              } from './modules/mergeSalmonCounts.nf'
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
+include { createSalmonPCA                                } from './modules/createSalmonPCA.nf'
 //include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
 // Print a header for your pipeline 
@@ -209,7 +210,8 @@ runTximportCount(runSalmonAlign.out, makeTx2geneFile.out)
 mergeSalmonCounts(runTximportCount.out.counts_gene.collect())
 
 // Create PCA 
-createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
+createSalmonPCA(mergeSalmonCounts.out.merged_salmon_counts, params.samples_info)
+//createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
 
 // Create BED and use ot for STAR metrics
 convertGtfToBED(params.refGtf)

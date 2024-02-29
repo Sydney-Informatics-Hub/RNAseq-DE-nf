@@ -8,7 +8,7 @@ process mergeSalmonCounts {
 
 
         output:
-                path("merged_counts_Salmon.tsv")
+                path("final_merged_counts_Salmon.tsv"), emit: merged_salmon_counts
 
         shell:
 
@@ -34,7 +34,8 @@ echo -e "GENEID\t${sample_ids[*]}" > "$output_file"
 # Merge counts and append to output file
 awk 'NR == 1 { next } FNR > 1 { a[$1] = a[$1]"\t"$3 } END { for (i in a) print i a[i] }' !{counts_gene} >> "$output_file"
 
-
-
+# Confirm the space between columns
+tr -s ' ' '\t' < ${output_file} > final_${output_file}
+    
     '''
 }
