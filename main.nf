@@ -24,13 +24,16 @@ include { bbduk      } from './modules/bbduk.nf'
 include { makeSTARIndex                                  } from './modules/makeSTARIndex'
 include { runSTARAlign                                   } from './modules/runSTARAlign'
 include { runSamtoolsMergeIndex                          } from './modules/runSamtoolsMergeIndex'
-include { runHtseqCount                                   } from './modules/runHtseqCount'
-include { mergeHtseqCounts                                } from './modules/mergeHtseqCounts'
+include { runHtseqCount                                  } from './modules/runHtseqCount'
+include { mergeHtseqCounts                               } from './modules/mergeHtseqCounts'
 include { makeSalmonIndex                                } from './modules/makeSalmonIndex.nf'
-include { runSalmonAlign                                } from './modules/runSalmonAlign.nf'
+include { runSalmonAlign                                 } from './modules/runSalmonAlign.nf'
+include { makeTx2geneFile                                } from './modules/makeTx2geneFile.nf'
+include { runTximportCount                               } from './modules/runTximportCount.nf'
+include { mergeSalmonCounts                              } from './modules/mergeSalmonCounts.nf'
 include { createPCAFromCounts                            } from './modules/createPCAFromCounts'
-
 include { convertGtfToBED                                } from './modules/convertGtfToBED'
+include { createSalmonPCA                                } from './modules/createSalmonPCA.nf'
 include { getMappingMetricRSeQC                          } from './modules/getMappingMetricRSeQC'
 
 // Print a header for your pipeline 
@@ -123,9 +126,7 @@ bbduk(params.adapters_bbmap, inputs)
 
 // Define star/salmon input
 align_input = bbduk.out.trimmed_fq
-  //.view() //ADDED THIS TO VISUALISE OUT STRUCTURE FOR DEBUGGING PURPOSES
   .map { tuple ->
-  // Extracting values and paths from the tuple produced by bbduk.out.trimmed_fq
   def sampleID = tuple[0]
   def lane = tuple[1]
   def runType = tuple[2]
@@ -196,15 +197,27 @@ mergeHtseqCounts(runHtseqCount.out.sampleIDCounts.collect())
 
 
 // Run Salmon Index and alignment
+makeSalmonIndex(params.refFasta,params.transcriptFasta)
 
-        makeSalmonIndex(params.refFasta,params.transcriptFasta)
-        runSalmonAlign(makeSalmonIndex.out,params.libType,align_input)
+runSalmonAlign(makeSalmonIndex.out,params.libType,alignmentInputSalmon)
         
+// Create tx2gene file (transcript to gene mapping)
+makeTx2geneFile(params.refGtf)
+
+// Run Tximport count
+runTximportCount(runSalmonAlign.out, makeTx2geneFile.out)
+
+// Merge counts together
+mergeSalmonCounts(runTximportCount.out.counts_gene.collect())
+
 // Create PCA 
+createSalmonPCA(mergeSalmonCounts.out.merged_salmon_counts, params.samples_info)
+
 createPCAFromCounts(mergeHtseqCounts.out.merged_counts_STAR,params.samples_info)
 
 // Create BED and use ot for STAR metrics
 convertGtfToBED(params.refGtf)
+
 getMappingMetricRSeQC(merged_input,convertGtfToBED.out)
 
 }}

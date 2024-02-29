@@ -5,19 +5,16 @@ process runSTARAlign {
         publishDir "${params.outDir}/${sampleID}/STAR", mode:'copy'
 
 input:
-// INPUT ORDER HERE NEEDS TO MATCH DEF ORDER BELOW 
+
     path STAR_ref_index_path
     tuple val(sampleID), val(lane), val(runType), val(platform), val(sequencingCentre), val(library), path(r1Path), path(r2Path)
 
 output:
-/// I CHANGED THIS TO CAPTURE SINGLE AND PAIRED END READS 
-/// AS IT WAS, IT FAILS WHEN R2 IS NULL AS YOU HAD SPECIFIED $LANE IN THE OUTPUT PATH
+
     tuple val(sampleID), path ("${sampleID}_${lane}_Aligned.sortedByCoord.out.bam"), path ("${sampleID}_${lane}_SJ.out.tab") , emit: sample_lane_bam
 
 script:
-	/// ORDER OF THESE DEFINITIONS IS BASED ON INPUT ORDER ABOVE
-	/// YOU CAN TEST THIS BY SWAPPING val(runType) WITH val(platform) IN THE INPUT SECTION
-	/// AND SEEING HOW THE SCRIPT FAILS
+
 	def sampleID = sampleID
 	def lane = lane
 	def runType = runType
@@ -27,10 +24,7 @@ script:
 	def R1Path = r1Path ?: '' // Set default value for null R1 path
     def R2Path = r2Path ?: '' // Set default value for null R2 path
 	
-	/// NOTE IN MAIN.NF PROCESS DEFINITIONS AND SOME PROCESS FILES I WAS ADJUSTING 
-	/// THAT I HAVE REMOVE ${NCPUS}. THERE IS NO NEED TO FILL THIS IN MANUALLY. 
-	/// SEE: https://www.nextflow.io/docs/latest/process.html FOR HOW TO USE TASK.CPU, TASK.MEMORY ETC 
-	/// TO CONNECT CONFIGURATION TO YOUR PROCESSES.
+
 	"""
 		# Mapping
 		if [ ${runType} == 'PAIRED' ]; then

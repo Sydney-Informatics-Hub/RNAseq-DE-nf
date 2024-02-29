@@ -3,7 +3,7 @@
 process runSalmonAlign {
  
  debug = true //turn to false to stop printing command stdout to screen
-    publishDir "${params.outDir}/${sampleID}", mode: 'copy'   
+    publishDir "${params.outDir}/${sampleID}/salmon", mode: 'copy'   
 	
     input:
 		path salmonIndex
@@ -11,7 +11,7 @@ process runSalmonAlign {
 		tuple val(sampleID), val(Lane) , val(RUN_TYPE_SINGLE_PAIRED), val(platform), val(seqcentre), val(library), path(r1Path), path(r2Path)
 
     output:
-    path salmon
+    tuple val(sampleID), path(salmon)
     
     script:
     """
